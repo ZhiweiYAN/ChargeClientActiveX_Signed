@@ -1,13 +1,16 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
+release
+debug
+ChargeClientActiveX/Debug/
+ChargeClientActiveX/Release/
+*.[oa]
+*~
+*.ncb
+*.ilk
+*.suo
+*.idl
+*.swp
+*.bak
+*.htm
+*.zip
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
