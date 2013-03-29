@@ -243,10 +243,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PacketOperation.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\PictureEx.cpp"
 				>
 			</File>
@@ -276,6 +272,10 @@
 			</File>
 			<File
 				RelativePath=".\UK_Et199Class.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\UsbKeyOperation.cpp"
 				>
 			</File>
 		</Filter>
@@ -321,10 +321,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PacketOperation.h"
-				>
-			</File>
-			<File
 				RelativePath=".\PictureEx.h"
 				>
 			</File>
@@ -342,6 +338,10 @@
 			</File>
 			<File
 				RelativePath=".\UK_Et199Class.h"
+				>
+			</File>
+			<File
+				RelativePath=".\UsbKeyOperation.h"
 				>
 			</File>
 		</Filter>

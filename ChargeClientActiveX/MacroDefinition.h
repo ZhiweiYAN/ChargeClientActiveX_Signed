@@ -65,11 +65,11 @@
 #define OCX_ERR_NETWORK_INFO "网络通信故障,Socket返回出错. 可能原因是网络不通.\
 \n(Network failed, and return errors after invoking socket functions.)"
 #define OCX_ERR_USB_KEY_CODE 12
-#define OCX_ERR_USB_KEY_INFO " USB KEY 出错. 可能原因是系统中没有发现合法的KEY.\
+#define OCX_ERR_USB_KEY_INFO " USB KEY 出错. 可能原因是系统中没有发现合法的USB KEY.\
 \n(USB Key operations failed, and invalid usb keys installed.)"
 
 #define OCX_ERR_Work_State_CODE 13
-#define OCX_ERR_Work_State_INFO " 反馈的工作状态出错"
+#define OCX_ERR_Work_State_INFO "发送和接收签名和加密解密, 出错."
 
 //页面的显示位置, the position label of web pages
 #define DISPLAY_WEB_POSITION 911L 
@@ -81,8 +81,8 @@
 #define COM_PKT_UP_PKT_TEMPLATE "packet_forward_template"
 #define COM_PKT_UP_PKT_DATA "forward_packet_data"
 #define COM_PKT_DOWN_PKT_TEMPLATE "packet_backward_template"
-#define TESTING_NETWORK_PKT "    02                                                                                                                  select version();"
-
+//#define TESTING_NETWORK_PKT "    02                                                                                                                  select version();"
+#define TESTING_NETWORK_PKT "00"
 #define INFO_DB_FILE_EXIST "交费的业务配置数据不在指定目录中,请重新下载. \
 \n(The local DB file is not the pre-installed directory. Download it at first, please.)"
 

@@ -429,6 +429,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
+	//Enable Glog INFO output from javascript codes on the web pages.
 	if(0==m_InputParameterDebugFlag.Compare(_T(DEBUG_INFO_ON))){
 		google::SetLogDestination(google::INFO,(CHARGE_CLIENT_LOG_INFO_FILE));
 	}
@@ -445,6 +446,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 	m_tcp_recv_buff.Empty();
 	m_ActivexErrorCode = 0;
 	m_ActivexErrorInfo.Empty();
+
 	//显示一个本地数据库的版本号,用于提示用.
 	//Display the version id of the local db file.
 	if(-1 == GetDbVersionID()){
@@ -672,11 +674,6 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 			m_usbkey.ExitInstance();
 			LOG(INFO)<<"original send pkt_len: "<<msg_len<<"original pkt: "<<msg;
 
-			//debug begin
-			//signed_crypted_send_pkt = (char*) malloc(5);
-			//signed_crypted_send_pkt_len = 5;
-			//memset(signed_crypted_send_pkt, 0xF, 5);
-			//debug end
 
 			//处理后检查结果
 			//Check the result of the transform operation with signature and crypt.
@@ -1438,7 +1435,7 @@ void CChargeClientActiveXCtrl::TestingFunction(LONG f)
 			}
 			else{
 				//DisplayDebugInfoToWebPage(_T("USB ID 为：")+token_name);
-				DisplayDebugInfoToWebPage(_T("数字签名USB状态, 成功."));
+				DisplayDebugInfoToWebPage(_T("数字签名USB KEY 功能, 正常, 成功."));
 			}
 			m_usbkey.ExitInstance();
 			break;

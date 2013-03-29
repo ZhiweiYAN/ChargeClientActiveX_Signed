@@ -106,7 +106,7 @@ int CSystemMaintenance::UpdateDbFile(CString ip_addr, int ad_flag)
 	if(1==ad_flag){
 		int ret_2 = system("color 17 && echo \"正在升级,请稍候.  \Updating Packet Templates... Now.\" \
 						   && echo ====================================================== \
-						   && echo  本软件 2011 卓题实验室(DrumTm Lab, drumtm.com) 保留所有权利. \
+						   && echo  本软件 2011 卓题(DrumTm Lab, drumtm.com) 保留所有权利. \
 						   && echo  如果您有疑问, 请联系我们(ssurui@gamil.com, jerod.yan@gmail.com). \
 						   && echo ====================================================== ");		
 		fflush(NULL);

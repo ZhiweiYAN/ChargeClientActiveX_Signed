@@ -128,6 +128,12 @@ int CNetwork::CheckRemoteNetWorking(CString &res_str)
 {
 	int ret = 0;
 	int err = 0;
+
+	char *server_ip = NULL;
+	char *server_port = NULL;
+
+	int len = 0;
+
 	res_str.Empty();
 
 	USES_CONVERSION;
@@ -145,10 +151,45 @@ int CNetwork::CheckRemoteNetWorking(CString &res_str)
 	//Create a socket.
 	ConnectSocket.Create();
 
-	err = ConnectSocket.Connect(_T(PROXY_SERVER_IP), PROXY_SERVER_PORT);
-	LOG(INFO)<<"IP="<<PROXY_SERVER_IP<<", Port="<<PROXY_SERVER_PORT;
-	LOG_IF(ERROR,0==err)<<"TCP Connection to Proxy Server. --> [Failed]."
-		<<"IP="<<PROXY_SERVER_IP<<", Port="<<PROXY_SERVER_PORT;
+	//从数据库中取出 数字签名IP与Port
+	if(0==NETWORK_SETUP_INNTER_FIXED){
+		err = db.GetDataByKeyFromDB(_T(DB_PROXY_SERVER_SIGNATURE_IP), &server_ip, &len);
+		if(-1==err)
+		{
+			ret=-1;
+			LOG(ERROR)<<"db.GetDataByKeyFromDB(_T(DB_PROXY_SERVER_SIGNATURE_IP) is not valid";
+			AfxMessageBox(ERRO_DOWNLOAD_DB);
+			m_sys.ExitProc();
+			return -1;
+		}
+		err = db.GetDataByKeyFromDB(_T(DB_PROXY_SERVER_SIGNATURE_PORT), &server_port, &len);
+		if(-1==err)
+		{
+			ret=-1;
+			LOG(ERROR)<<"db.GetDataByKeyFromDB(_T(DB_PROXY_SERVER_SIGNATURE_PORT) is not valid";
+			AfxMessageBox(ERRO_DOWNLOAD_DB);
+			m_sys.ExitProc();
+			return -1;
+		}
+		err = ConnectSocket.Connect(A2T(server_ip), atoi(server_port));
+		LOG(INFO)<<"IP="<<server_ip<<"Port="<<server_port;
+
+		if(NULL!=server_ip){
+			free(server_ip);
+			server_ip = NULL;
+		}
+		if(NULL!=server_port){
+			free(server_port);
+			server_port = NULL;
+		}
+		len = 0;
+	}else{
+		err = ConnectSocket.Connect(_T(PROXY_SERVER_SIGNATURE_IP), PROXY_SERVER_SIGNATURE_PORT);
+		LOG(INFO)<<"IP="<<PROXY_SERVER_SIGNATURE_IP<<"Port="<<PROXY_SERVER_SIGNATURE_PORT;
+		LOG_IF(ERROR,0==err)<<"TCP Connection to Proxy Server. --> [Failed]."
+		<<"IP="<<PROXY_SERVER_SIGNATURE_IP<<"Port="<<PROXY_SERVER_SIGNATURE_PORT;
+	}
+
 
 	int bytes = 0;
 	char buff[MAX_STRING_LENGTH];
@@ -186,7 +227,7 @@ int CNetwork::CheckRemoteNetWorking(CString &res_str)
 		LOG(INFO)<<"Testing TCP Recv_data="<<T2A(tcp_recv_buff);
 		LOG(INFO)<<"Testing TCP Recv ---> [OK].";
 		res_str = res_str + (_T("测试接收数据从数据中心机房 成功。\n."));
-		res_str = res_str + tcp_recv_buff.Right(27);
+		res_str = res_str + tcp_recv_buff;
 	}else{
 		LOG(WARNING)<<"TCP Recv ---> [Failed].";
 		res_str = res_str + (_T("测试接收数据从数据中心机房 失败。."));

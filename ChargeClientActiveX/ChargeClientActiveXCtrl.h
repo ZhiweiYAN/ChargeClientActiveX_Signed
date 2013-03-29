@@ -7,7 +7,7 @@
 #include "berkeleydb.h"
 #include "Network.h"
 //#include "usbsignature.h"
-#include "PacketOperation.h"
+#include "UsbKeyOperation.h"
 
 
 static int init_glog_once =0 ;
@@ -202,7 +202,7 @@ private:
 	CNetwork m_net;
 private:
 	//CUsbSignature m_signature;
-	CPacketOperation m_usbkey;
+	CUsbKeyOperation m_usbkey;
 protected:
 	BSTR GetTerminalID(void);
 	BSTR GetUserID(void);

@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 6.00.0366 */
-/* at Tue Jan 22 12:44:49 2013
+/* at Fri Mar 29 19:33:26 2013
  */
 /* Compiler settings for .\ChargeClientActiveX.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
