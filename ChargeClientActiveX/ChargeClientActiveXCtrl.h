@@ -77,9 +77,9 @@ public:
 		dispidTestingFunction = 36L,
 		dispidWebOrder = 35,
 		dispidOutputFields = 34,
-		//dispidRemoveTemplate = 33L,
+		dispidRemoveTemplate = 33L,
 		dispidInputFields = 32,
-		//dispidAddTemplate = 8L,
+		dispidAddTemplate = 8L,
 		dispidInputParameterActName = 7,
 		dispidInputParameterComName = 6,
 		eventidDisplayAtPosition = 5L,
@@ -159,8 +159,8 @@ protected:
 //输出给Javascript脚本使用的函数_BEGIN
 protected:
 	void LoadParameter(void);
-	/*void AddTemplate(LPCTSTR key, LONG key_len, LPCTSTR data, LONG data_Len);
-	void RemoveTemplate(LPCTSTR key, LONG key_len);*/
+	void AddTemplate(LPCTSTR key, LONG key_len, LPCTSTR data, LONG data_Len);
+	void RemoveTemplate(LPCTSTR key, LONG key_len);
 	void TestingFunction(LONG f);
 
 	void PrepareInvoiceItem(LONG x, LONG y, LPCTSTR data, LONG data_len);
@@ -192,7 +192,7 @@ private:
 
 private:
 	int GetDbVersionID(void);
-	//int ScanTemplateDB(char * database);
+	int ScanTemplateDB(char * database);
 
 private:
 	CDotPrinter m_dot_printer;

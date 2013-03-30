@@ -1,3 +1,8 @@
+#2013-03-30
+## 对USB Key的自检
+- 加入取Ukey的ID,并显示在界面上
+- 重新开放ActiveX的数据库操作功能
+
 #2013-03-29
 ## 第三方库的头文件所在目录
 1. USB KEY，C:\et199_pki_dll\Include\pkcs11;

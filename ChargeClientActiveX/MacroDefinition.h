@@ -91,6 +91,7 @@
 #define TureURL "TURE_URL"
 #define OCX_FILE "c:\\Windows\\Downlo~1\\ChargeClientActiveX.ocx"
 #define DB_FILE "c:\\charge_client\\charge_client_local_db.db"
+#define DB_BACKUP_FILE "c:\\charge_client\\charge_client_local_db.bak"
 #define DB_URL "TURE_URL/la_client/db_repository/charge_client_local_db.db"
 #define INF_FILE "c:\\Windows\\Downlo~1\\ChargeClientActiveX.inf"
 #define ICCARD_FILE_1 "c:\\Windows\\System32\\Mwic_32.dll"

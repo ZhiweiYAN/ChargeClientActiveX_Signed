@@ -80,7 +80,7 @@ public:
 	////////////////////////////////////////////////////
 	////////////////////////////////////////////////////
 	//功能：RSA加密(使用公钥PublicKey)
-	//输入：BOOL bRometPublickey,     (TRUE:获取subjec="Romete RSA Public Key"的公钥；
+	//输入：BOOL bRometPublickey,     (TRUE:获取subjec="Romote RSA Public Key"的公钥；
 	//                                  FALSE：第一个公钥)
 	//      unsigned char pbMsg[]       欲签名信息
 	//      DWORD ulMsgLen              长度

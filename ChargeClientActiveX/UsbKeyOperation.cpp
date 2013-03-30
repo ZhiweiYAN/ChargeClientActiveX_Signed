@@ -69,7 +69,7 @@ bool CUsbKeyOperation::SelfCheck(CString &info)
 	m_bServerPublic=FALSE;
 	if(SignedEncrypt(pstr,test_plain_txt_len,(unsigned char**)&pSignedBuffer,Signedbuffer_len)==false)
 	{
-		info=_T("USB KEY 自检, 签名, 加密 失败.");
+		info= info + _T("USB KEY 自检, 签名, 加密 失败.");
 		LOG(ERROR)<<T2A(info);
 		if(NULL != pSignedBuffer)
 		{
@@ -80,7 +80,7 @@ bool CUsbKeyOperation::SelfCheck(CString &info)
 		return false;
 	}
 	
-	//here for general use, maybe change later.
+	//here for general use to handle with verify packet header, maybe change it later.
 	pSignedBuffer[BZ_LEN+UKID_LEN]='0';
 	
 	//对密文解密
@@ -89,7 +89,7 @@ bool CUsbKeyOperation::SelfCheck(CString &info)
 	char bz;
 	if(DecryptVerify(pSignedBuffer,Signedbuffer_len,bz,(unsigned char**)&pBuffer,buffer_len,info)==false)
 	{		
-		info=_T("USB KEY 自检, 解密, 验签 失败.");
+		info= info + _T("USB KEY 自检, 解密, 验签 失败.");
         LOG(ERROR)<<T2A(info);
 		if(NULL!=pSignedBuffer)
 		{
@@ -112,7 +112,7 @@ bool CUsbKeyOperation::SelfCheck(CString &info)
 	{
 		if(pBuffer[i]!=pstr[i])
 		{
-			info=_T("原始明文与解密后明文两者内容不一致");
+			info=info+_T("原始明文与解密后明文两者内容不一致");
             LOG(ERROR)<<info;
 			LOG(ERROR)<<"Origin Plain Text:"<<(pstr);
 			LOG(ERROR)<<"Decrypted Text:"<<(pBuffer);
@@ -130,8 +130,21 @@ bool CUsbKeyOperation::SelfCheck(CString &info)
 		free(pBuffer);
 		pBuffer=NULL;
 	}
+	
+	CString terminal_id;
+	CString user_id;
+	CString err_info;
 
-	info=_T("USB KEY 工作正常.");
+	terminal_id.Empty();
+	user_id.Empty();
+
+	terminal_id = GetTerminalID(err_info);
+	user_id = GetUserID(err_info);
+
+
+
+	info=info + _T("USBKey ID: ")+terminal_id + user_id;
+
 	return true;
 
 	

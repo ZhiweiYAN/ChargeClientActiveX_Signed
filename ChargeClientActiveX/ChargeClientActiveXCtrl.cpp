@@ -41,8 +41,8 @@ BEGIN_DISPATCH_MAP(CChargeClientActiveXCtrl, COleControl)
 	DISP_PROPERTY_PARAM_ID(CChargeClientActiveXCtrl, "InputFields", dispidInputFields, GetInputFields, SetInputFields, VT_BSTR, VTS_I2)
 	DISP_PROPERTY_PARAM_ID(CChargeClientActiveXCtrl, "OutputFields", dispidOutputFields, GetOutputFields, SetOutputFields, VT_BSTR, VTS_I2)
 	DISP_FUNCTION_ID(CChargeClientActiveXCtrl, "LoadParameter", dispidLoadParameter, LoadParameter, VT_EMPTY, VTS_NONE)
-	//	DISP_FUNCTION_ID(CChargeClientActiveXCtrl, "AddTemplate", dispidAddTemplate, AddTemplate, VT_EMPTY, VTS_BSTR VTS_I4 VTS_BSTR VTS_I4)
-	//	DISP_FUNCTION_ID(CChargeClientActiveXCtrl, "RemoveTemplate", dispidRemoveTemplate, RemoveTemplate, VT_EMPTY, VTS_BSTR VTS_I4)
+	DISP_FUNCTION_ID(CChargeClientActiveXCtrl, "AddTemplate", dispidAddTemplate, AddTemplate, VT_EMPTY, VTS_BSTR VTS_I4 VTS_BSTR VTS_I4)
+	DISP_FUNCTION_ID(CChargeClientActiveXCtrl, "RemoveTemplate", dispidRemoveTemplate, RemoveTemplate, VT_EMPTY, VTS_BSTR VTS_I4)
 	DISP_PROPERTY_NOTIFY_ID(CChargeClientActiveXCtrl, "WebOrder", dispidWebOrder, m_WebOrder, OnWebOrderChanged, VT_BSTR)
 	DISP_FUNCTION_ID(CChargeClientActiveXCtrl, "TestingFunction", dispidTestingFunction, TestingFunction, VT_EMPTY, VTS_I4)
 	DISP_FUNCTION_ID(CChargeClientActiveXCtrl, "PrepareInvoiceItem", dispidPrepareInvoiceItem, PrepareInvoiceItem, VT_EMPTY, VTS_I4 VTS_I4 VTS_BSTR VTS_I4)
@@ -906,77 +906,77 @@ int CChargeClientActiveXCtrl::GetDbVersionID(void)
 	return ret;
 }
 
-//
-//void CChargeClientActiveXCtrl::AddTemplate(LPCTSTR key, LONG key_len, LPCTSTR data, LONG data_Len)
-//{
-//	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-//
-//	// TODO: 在此添加调度处理程序代码
-//	int ret = 0;
-//	CString input_key(key);
-//	CString input_data(data);
-//	input_key.Trim();
-//	input_data.Trim();
-//
-//	// Add the DB timestamp
-//	// 加入时间戳
-//	CTime time = CTime::GetCurrentTime();
-//	CString db_time_stamp = time.Format("%Y.%m.%d.%H.%M.%S");
-//
-//	ret = m_db.CheckKeyDataStringValid(input_key,input_data);
-//	if(-1==ret){
-//		DisplayBackToWebPage(_T("出现不合法字符, 模板插入失败."),DISPLAY_WEB_POSITION);
-//	}else{
-//		m_db.InsertRecordIntoDatabase(_T(DB_TIME_STAMP_KEY),db_time_stamp);
-//		m_db.InsertRecordIntoDatabase(input_key, input_data);
-//	}
-//	CString res_str;
-//	res_str.Empty();
-//	m_db.ScanTemplateDB(CHARGE_CLIENT_DB_FILE_NAME, res_str);
-//	return ;
-//
-//}
-//
-//void CChargeClientActiveXCtrl::RemoveTemplate(LPCTSTR key, LONG key_len)
-//{
-//	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-//
-//	// TODO: 在此添加调度处理程序代码
-//
-//	CString s = key;
-//	s.Trim();
-//	if(!s.IsEmpty()){
-//
-//		//加入时间戳
-//		// Add the DB timestamp
-//		CTime time = CTime::GetCurrentTime();
-//		CString db_time_stamp = time.Format("%Y.%m.%d.%H.%M.%S");
-//		m_db.InsertRecordIntoDatabase(_T(DB_TIME_STAMP_KEY),db_time_stamp);
-//
-//		//删除记录从数据库中
-//		//Delete the records from the DB
-//		m_db.RemoveRecordFromDatabase(s);
-//	}
-//	s.Empty();
-//	m_db.ScanTemplateDB(CHARGE_CLIENT_DB_FILE_NAME,s);
-//	DisplayDebugInfoToWebPage(s);
-//	return ;
-//
-//}
-//
-////显示数据库中所有数据
-////Display the all data and key in the DB.
-//int CChargeClientActiveXCtrl::ScanTemplateDB(char * database)
-//{
-//	 CString res_str;
-//	 res_str.Empty();
-//
-//	 m_db.ScanTemplateDB(database, res_str);
-//	 m_OutputParameterA.Empty();
-//	 m_OutputParameterA = res_str;
-//	 FireDisplayAtPosition(911L);
-//	 return (0);
-//}
+
+void CChargeClientActiveXCtrl::AddTemplate(LPCTSTR key, LONG key_len, LPCTSTR data, LONG data_Len)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	// TODO: 在此添加调度处理程序代码
+	int ret = 0;
+	CString input_key(key);
+	CString input_data(data);
+	input_key.Trim();
+	input_data.Trim();
+
+	// Add the DB timestamp
+	// 加入时间戳
+	CTime time = CTime::GetCurrentTime();
+	CString db_time_stamp = time.Format("%Y.%m.%d.%H.%M.%S");
+
+	ret = m_db.CheckKeyDataStringValid(input_key,input_data);
+	if(-1==ret){
+		DisplayBackToWebPage(_T("出现不合法字符, 模板插入失败."),DISPLAY_WEB_POSITION);
+	}else{
+		m_db.InsertRecordIntoDatabase(_T(DB_TIME_STAMP_KEY),db_time_stamp);
+		m_db.InsertRecordIntoDatabase(input_key, input_data);
+	}
+	CString res_str;
+	res_str.Empty();
+	m_db.ScanTemplateDB(CHARGE_CLIENT_DB_FILE_NAME, res_str);
+	return ;
+
+}
+
+void CChargeClientActiveXCtrl::RemoveTemplate(LPCTSTR key, LONG key_len)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	// TODO: 在此添加调度处理程序代码
+
+	CString s = key;
+	s.Trim();
+	if(!s.IsEmpty()){
+
+		//加入时间戳
+		// Add the DB timestamp
+		CTime time = CTime::GetCurrentTime();
+		CString db_time_stamp = time.Format("%Y.%m.%d.%H.%M.%S");
+		m_db.InsertRecordIntoDatabase(_T(DB_TIME_STAMP_KEY),db_time_stamp);
+
+		//删除记录从数据库中
+		//Delete the records from the DB
+		m_db.RemoveRecordFromDatabase(s);
+	}
+	s.Empty();
+	m_db.ScanTemplateDB(CHARGE_CLIENT_DB_FILE_NAME,s);
+	DisplayDebugInfoToWebPage(s);
+	return ;
+
+}
+
+//显示数据库中所有数据
+//Display the all data and key in the DB.
+int CChargeClientActiveXCtrl::ScanTemplateDB(char * database)
+{
+	 CString res_str;
+	 res_str.Empty();
+
+	 m_db.ScanTemplateDB(database, res_str);
+	 m_OutputParameterA.Empty();
+	 m_OutputParameterA = res_str;
+	 FireDisplayAtPosition(911L);
+	 return (0);
+}
 
 
 int CChargeClientActiveXCtrl::GetPacketTemplateFieldNumberEx(CString pkt_template)
@@ -1435,7 +1435,7 @@ void CChargeClientActiveXCtrl::TestingFunction(LONG f)
 			}
 			else{
 				//DisplayDebugInfoToWebPage(_T("USB ID 为：")+token_name);
-				DisplayDebugInfoToWebPage(_T("数字签名USB KEY 功能, 正常, 成功."));
+				DisplayDebugInfoToWebPage(_T("数字签名USB KEY 功能, 正常, 成功.") + info);
 			}
 			m_usbkey.ExitInstance();
 			break;

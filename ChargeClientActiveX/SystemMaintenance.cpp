@@ -4,7 +4,7 @@
 #include <strsafe.h>
 #include <curl/curl.h>
 #include "afxsock.h"
-//#include "io.h"
+#include "io.h"
 #include "MacroDefinition.h"
 //#include "UsbSignature.h"
 #pragma warning(push)
@@ -40,7 +40,20 @@ int CSystemMaintenance::UpdateDbFile(CString ip_addr, int ad_flag)
 	fflush(NULL);
 
 	//delete file, success
-	err = ::DeleteFile(_T(DB_FILE));
+	//backup the origin file
+	ret = _access_s(DB_BACKUP_FILE,0);
+	if(0 ==ret){
+		err = ::DeleteFile(_T(DB_BACKUP_FILE));
+	}
+
+	ret = _access_s(DB_FILE,0);
+	if(0 ==ret){
+		err = ::MoveFile(_T(DB_FILE), _T(DB_BACKUP_FILE));
+		err = ::DeleteFile(_T(DB_FILE));
+	}
+
+
+
 	USES_CONVERSION;
 
 	CString cmd_str(DB_URL);
@@ -106,8 +119,7 @@ int CSystemMaintenance::UpdateDbFile(CString ip_addr, int ad_flag)
 	if(1==ad_flag){
 		int ret_2 = system("color 17 && echo \"正在升级,请稍候.  \Updating Packet Templates... Now.\" \
 						   && echo ====================================================== \
-						   && echo  本软件 2011 卓题(DrumTm Lab, drumtm.com) 保留所有权利. \
-						   && echo  如果您有疑问, 请联系我们(ssurui@gamil.com, jerod.yan@gmail.com). \
+						   && echo  本软件 广东利安便民服务有限公司 保留所有权利. \
 						   && echo ====================================================== ");		
 		fflush(NULL);
 		Sleep(TIME_OUT_INTERVAL);
