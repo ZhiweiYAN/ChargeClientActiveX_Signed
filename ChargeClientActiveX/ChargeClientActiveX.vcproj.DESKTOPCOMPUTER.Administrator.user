@@ -37,7 +37,7 @@
 			Name="Release|Win32"
 			>
 			<DebugSettings
-				Command=""
+				Command="C:\Program Files\Internet Explorer\IEXPLORE.EXE"
 				WorkingDirectory=""
 				CommandArguments=""
 				Attach="false"

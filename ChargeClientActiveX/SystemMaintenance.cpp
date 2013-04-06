@@ -119,7 +119,7 @@ int CSystemMaintenance::UpdateDbFile(CString ip_addr, int ad_flag)
 	if(1==ad_flag){
 		int ret_2 = system("color 17 && echo \"正在升级,请稍候.  \Updating Packet Templates... Now.\" \
 						   && echo ====================================================== \
-						   && echo  本软件 广东利安便民服务有限公司 保留所有权利. \
+						   && echo  本软件 广东利安有限公司 保留所有权利. \
 						   && echo ====================================================== ");		
 		fflush(NULL);
 		Sleep(TIME_OUT_INTERVAL);

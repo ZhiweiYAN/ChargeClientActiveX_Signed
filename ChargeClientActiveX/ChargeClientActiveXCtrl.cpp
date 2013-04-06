@@ -726,20 +726,28 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 				//err = Function_uncrypted_unsigned(char* signed_crypted_recv_pkt, int signed_crypted_recv_pkt_len, 
 				//	char* *uncrypted_unsigned_recv_pkt, int* uncrypted_unsigned_recv_pkt_len);
 				m_usbkey.InitInstance();
-				BOOL ret_usb_key = m_usbkey.DecryptVerify((unsigned char*)signed_crypted_recv_pkt, signed_crypted_recv_pkt_len,
+				BOOL ret_usb_key = false;
+				ret_usb_key = m_usbkey.DecryptVerify((unsigned char*)signed_crypted_recv_pkt, signed_crypted_recv_pkt_len,
 					ret_state,
 					(unsigned char* * )&uncrypted_unsigned_recv_pkt,uncrypted_unsigned_recv_pkt_len,res_str);
 
 				m_usbkey.ExitInstance();
+
+				DisplayDebugInfoToWebPage( res_str );
 				LOG(INFO)<<"uncrypted_unsigned_recv_pkt_len"<<uncrypted_unsigned_recv_pkt_len;
 				LOG(INFO)<<"uncrypted_unsigned_recv_pkt"<<T2A(m_db.hex2str(uncrypted_unsigned_recv_pkt,uncrypted_unsigned_recv_pkt_len));
-
+				
 				//Here, we can release the recv buffer.
 				if(NULL!= signed_crypted_recv_pkt){
 					LOG(INFO)<<"Free memory, signed_crypted_recv_pkt";
 					free(signed_crypted_recv_pkt);
 					signed_crypted_recv_pkt = NULL;
 					signed_crypted_recv_pkt_len = 0;
+				}
+
+				if (false == ret_usb_key){
+					err=-1;
+					AfxMessageBox(res_str,MB_OK, 0);	
 				}
 
 
@@ -1500,6 +1508,12 @@ void CChargeClientActiveXCtrl::SetErrorInfo4Web(long err_code)
 			m_ActivexErrorInfo = _T( OCX_ERR_USB_KEY_INFO );
 			DisplayDebugInfoToWebPage(_T( OCX_ERR_USB_KEY_INFO ));
 			break;
+		case OCX_ERR_Work_State_CODE:
+			m_ActivexErrorCode = OCX_ERR_Work_State_CODE;
+			m_ActivexErrorInfo = _T( OCX_ERR_Work_State_INFO );
+			DisplayDebugInfoToWebPage(_T( OCX_ERR_Work_State_INFO ));
+			break;
+
 		default:
 			break;
 	}

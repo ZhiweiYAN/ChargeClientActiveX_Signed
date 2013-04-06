@@ -333,10 +333,12 @@ bool CUsbKeyOperation::DecryptVerify(unsigned char *in_buffer, int in_buffer_Len
 	CString info;//提示信息
 	if(in_buffer_Len<=DATA_BEGIN_POS ||NULL==in_buffer)
 	{
-		LOG(ERROR)<<"接收的下行通信包="<<in_buffer;
-		LOG(ERROR)<<"接收的下行通信包没有发现被加密的数据区,所以无法完成数据区解密";	
+		LOG(ERROR)<<"Recv Buffer:"<<in_buffer;
+		//LOG(ERROR)<<"接收的下行通信包没有发现被加密的数据区,所以无法完成数据区解密";	
+		LOG(ERROR)<<"We failed to decrypt data because there are not the encrypted data area in recv buffer. ";	
         GetErroInfo(in_buffer,in_buffer_Len,info);
 		LOG(ERROR)<<T2A(info);	
+		erro = info;
 		return false;
 	}
 	//首先：UK设备联结

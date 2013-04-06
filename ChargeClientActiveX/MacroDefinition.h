@@ -3,7 +3,7 @@
 
 
 //程序的功能简介, the introduction of the program.
-#define FUNCTION_INFO "\n本版本功能: 支持数字签名, 支持针式打印机, 支持网络.(利安集团软件部)"
+#define FUNCTION_INFO "\n本版本功能: 支持数字签名, 支持针式打印机, 支持网络.(广东利安软件部)"
 
 #define MAX_PACKET_FIELD_NUM 128
 #define MAX_STRING_LENGTH 65534
@@ -78,9 +78,9 @@
 #define DB_TIME_STAMP_KEY "DB_TIME_STAMP"
 #define DB_VERSION_ID_KEY DB_TIME_STAMP_KEY
 #define COMMON_PKT_HEADR_TEMPLATE "common_packet_header_template"
-#define COM_PKT_UP_PKT_TEMPLATE "packet_forward_template"
+#define COM_PKT_UP_PKT_TEMPLATE "forward_packet_template"
 #define COM_PKT_UP_PKT_DATA "forward_packet_data"
-#define COM_PKT_DOWN_PKT_TEMPLATE "packet_backward_template"
+#define COM_PKT_DOWN_PKT_TEMPLATE "backward_packet_template"
 //#define TESTING_NETWORK_PKT "    02                                                                                                                  select version();"
 #define TESTING_NETWORK_PKT "00"
 #define INFO_DB_FILE_EXIST "交费的业务配置数据不在指定目录中,请重新下载. \
