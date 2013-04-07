@@ -189,8 +189,8 @@ CChargeClientActiveXCtrl::CChargeClientActiveXCtrl()
 		//for debug		
 		CString version_info_str(_T(FUNCTION_INFO));
 		version_info_str = version_info_str 
-			+_T("\n\n编译日期: ")_T(__DATE__)
-			+_T("\n编译时间: ") + _T(__TIME__);
+			+_T("\n\n发布日期: ")_T(__DATE__)
+			+_T("\n发布时间: ") + _T(__TIME__);
 		AfxMessageBox(version_info_str,MB_OK, 0);	
 
 	}
@@ -698,7 +698,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 
 			//发送签名加密后的数据包，为二进制数据，与字符串型的数据不同，
 			//所以，又重新写了一个发送与接收函数，2012-12-04。
-			//Since the tranformed data are binary, we re-write the send and receive functions.
+			//Since the transformed data are binary, we re-write the send and receive functions.
 			LOG(INFO)<<"Send signed pkt and recv signed pkt";
 			CString res_str;
 			err = m_net.SendRecvPacketToSignatureServer(signed_crypted_send_pkt, signed_crypted_send_pkt_len, 
@@ -712,6 +712,11 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 				free(signed_crypted_send_pkt);
 				signed_crypted_send_pkt  = NULL;
 				signed_crypted_send_pkt_len = 0;
+			}
+
+			if(0!=err){
+				SetErrorInfo4Web(OCX_ERR_NETWORK_CODE);
+				return;
 			}
 
 			//解密，验签名 （由军虎的程序处理)

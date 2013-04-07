@@ -3,7 +3,7 @@
 
 
 //程序的功能简介, the introduction of the program.
-#define FUNCTION_INFO "\n本版本功能: 支持数字签名, 支持针式打印机, 支持网络.(广东利安软件部)"
+#define FUNCTION_INFO "\n欢迎使用「广东利安平台」！"
 
 #define MAX_PACKET_FIELD_NUM 128
 #define MAX_STRING_LENGTH 65534

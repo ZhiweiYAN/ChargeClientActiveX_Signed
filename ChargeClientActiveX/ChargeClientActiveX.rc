@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,1,0
- PRODUCTVERSION 1,0,1,0
+ FILEVERSION 1,0,2,0
+ PRODUCTVERSION 1,0,2,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -70,15 +70,14 @@ BEGIN
         BLOCK "080403a8"
         BEGIN
             VALUE "CompanyName", "DrumTm"
-            VALUE "FileDescription", "利安电子社区终端店面的软件"
-            VALUE "FileVersion", "1.0.1.0"
+            VALUE "FileDescription", "广东利安便民服务公司终端店面软件"
+            VALUE "FileVersion", "1.0.2.0"
             VALUE "InternalName", "ChargeClientActiveX.ocx"
-            VALUE "LegalCopyright", "(C) DrumTm。保留所有权利。"
-            VALUE "LegalTrademarks", "DrumTm"
-            VALUE "OLESelfRegister", "\0"
+            VALUE "LegalCopyright", "(C) 广东利安保留所有权利。"
+            VALUE "LegalTrademarks", "广东利安"
             VALUE "OriginalFilename", "ChargeClientActiveX.ocx"
-            VALUE "ProductName", "电子交易平台的交费前端"
-            VALUE "ProductVersion", "1.0.1.0"
+            VALUE "ProductName", "广东利安平台的前端"
+            VALUE "ProductVersion", "1.0.2.0"
         END
     END
     BLOCK "VarFileInfo"

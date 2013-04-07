@@ -637,7 +637,7 @@ int CNetwork::SendRecvPacketToSignatureServer(char* send_pkt , int send_pkt_len,
 	}else{
 		err = ConnectSocket.Connect(_T(PROXY_SERVER_SIGNATURE_IP), PROXY_SERVER_SIGNATURE_PORT);
 		LOG(INFO)<<"IP="<<PROXY_SERVER_SIGNATURE_IP<<"Port="<<PROXY_SERVER_SIGNATURE_PORT;
-		LOG_IF(ERROR,0==err)<<"TCP Connection to Proxy Server. --> [Failed]."
+		LOG_IF(ERROR,0==err)<<"TCP Connection to verify Server. --> [Failed]."
 		<<"IP="<<PROXY_SERVER_SIGNATURE_IP<<"Port="<<PROXY_SERVER_SIGNATURE_PORT;
 	}
 	if(0==err){
