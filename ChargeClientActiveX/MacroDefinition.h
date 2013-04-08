@@ -3,7 +3,8 @@
 
 
 //程序的功能简介, the introduction of the program.
-#define FUNCTION_INFO "\n欢迎使用「广东利安平台」！"
+#define FUNCTION_INFO "\n欢迎使用「广东利安 便民软件平台」！\n Welcome you to [Lian Platform]."
+
 
 #define MAX_PACKET_FIELD_NUM 128
 #define MAX_STRING_LENGTH 65534
@@ -77,6 +78,9 @@
 //数据库的固定字段, the necessary data record in the local database file. 
 #define DB_TIME_STAMP_KEY "DB_TIME_STAMP"
 #define DB_VERSION_ID_KEY DB_TIME_STAMP_KEY
+#define DB_DOWNLOAD_FLAG_KEY "DB_DOWNLOAD_FLAG"
+#define DB_DOWNLOAD_TRUE "1"
+#define DB_DOWNLOAD_FALSE "0"
 #define COMMON_PKT_HEADR_TEMPLATE "common_packet_header_template"
 #define COM_PKT_UP_PKT_TEMPLATE "forward_packet_template"
 #define COM_PKT_UP_PKT_DATA "forward_packet_data"

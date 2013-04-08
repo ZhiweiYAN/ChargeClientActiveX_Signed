@@ -992,13 +992,13 @@ BOOL CUK_Et199Class::RSA_Signed(unsigned char pbMsg[],DWORD ulMsgLen,
 	
 }
 //签名验证
-BOOL CUK_Et199Class::RSA_Verify_PublicKey(BOOL bRometPublicKey,unsigned char pbMsg[],DWORD ulMsgLen,
+BOOL CUK_Et199Class::RSA_Verify_PublicKey(BOOL bRemotePublicKey,unsigned char pbMsg[],DWORD ulMsgLen,
 								unsigned char pSignature[],DWORD ulSignatureLen,
 								CString &Info)
 {
 	//数据对象句柄 
 	CK_OBJECT_HANDLE m_hPubKey = NULL; 
-	if(GetUsbKeyObject(bRometPublicKey,FALSE,m_hPubKey,Info)==FALSE)
+	if(GetUsbKeyObject(bRemotePublicKey,FALSE,m_hPubKey,Info)==FALSE)
 	{
 		return FALSE;
 	}

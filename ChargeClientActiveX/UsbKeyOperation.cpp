@@ -1,26 +1,8 @@
 #include "StdAfx.h"
 #include "UsbKeyOperation.h"
-
-#undef ERROR
 #include <glog/logging.h>
 
-#define UKIDNAME "UKID"
-#define Padding_Len 1
 
-#define SHA1_LEN 20
-#define SignedData_LEN 128
-
-#define UK_PIN "1uTZxyaR1TAP"
-//通信帧
-#define SignedBZ "10"
-#define BZ_LEN 2
-#define TerminalID_LEN 8
-#define UserID_LEN 4
-#define UKID_LEN (TerminalID_LEN+UserID_LEN)
-#define RESERVE_Char ' '
-#define RESERVE_LEN 16+30
-#define DATASize_LEN 4
-#define DATA_BEGIN_POS (BZ_LEN+UKID_LEN+RESERVE_LEN+DATASize_LEN)
 CUsbKeyOperation::CUsbKeyOperation(void)
 {
 }
@@ -173,7 +155,7 @@ bool CUsbKeyOperation::GetUKID(unsigned char ukid[],DWORD len,CString &info)
 }
 
 // 对数据包进行加密处理（先散列，再签名，最后加密）后，形成带帧头的通信包
-bool CUsbKeyOperation::SignedEncrypt(unsigned char *in_buffer, int in_buffer_Len, unsigned char** out_buffer, int &out_buffer_Len)
+bool CUsbKeyOperation::SignedEncrypt(unsigned char *in_buffer, int in_buffer_Len, unsigned char** out_buffer, int &out_buffer_len)
 {
 
 	USES_CONVERSION;
@@ -217,10 +199,10 @@ bool CUsbKeyOperation::SignedEncrypt(unsigned char *in_buffer, int in_buffer_Len
 	LOG(INFO)<<"散列:"<<T2A(CString(m_MsgSHA1));
 	LOG(INFO)<<"散列处理(16):"<<T2A(nByteTo16Str(MsgSHA1_Len,m_MsgSHA1));
 	//第三步：对散列数据进行签名
-	unsigned char *m_signeddata=new unsigned char[SignedData_LEN+in_buffer_Len+1];	
-	memset(m_signeddata,NULL,SignedData_LEN+in_buffer_Len+1);
+	unsigned char *m_signeddata=new unsigned char[SIGNATURE_LEN+in_buffer_Len+1];	
+	memset(m_signeddata,NULL,SIGNATURE_LEN+in_buffer_Len+1);
 	//3.1 制造签名
-	DWORD SignedData_Len=SignedData_LEN+1;
+	DWORD SignedData_Len=SIGNATURE_LEN+1;
 	if(m_ET199.RSA_Signed(m_MsgSHA1,MsgSHA1_Len,m_signeddata,SignedData_Len,info)==FALSE)
 	{
 		if(m_signeddata!=NULL)
@@ -235,14 +217,14 @@ bool CUsbKeyOperation::SignedEncrypt(unsigned char *in_buffer, int in_buffer_Len
 	//3.2 签名+原信息 = 组合成签名后信息包
 	memcpy(m_signeddata+SignedData_Len,in_buffer,in_buffer_Len);	
 	//LOG(INFO)<<"签名:"<<T2A(CString(m_signeddata));
-	LOG(INFO)<<"签名(16):"<<T2A(nByteTo16Str(SignedData_LEN+in_buffer_Len,m_signeddata));
+	LOG(INFO)<<"签名(16):"<<T2A(nByteTo16Str(SIGNATURE_LEN+in_buffer_Len,m_signeddata));
 	//第四步：对签名后信息包进行加密
-	DWORD Encrypt_Len=SignedData_LEN+in_buffer_Len+SignedData_LEN;//预测加密长度比原文长度不会超过128；
+	DWORD Encrypt_Len=SIGNATURE_LEN+in_buffer_Len+SIGNATURE_LEN;//预测加密长度比原文长度不会超过128；
     unsigned char *m_Encryptdata=new unsigned char[Encrypt_Len+1];	
 	memset(m_Encryptdata,NULL,Encrypt_Len+1);
 	
 
-	if(m_ET199.RSA_Encrypt(m_bServerPublic,m_signeddata,SignedData_LEN+in_buffer_Len,m_Encryptdata,Encrypt_Len,info)==FALSE)
+	if(m_ET199.RSA_Encrypt(m_bServerPublic,m_signeddata,SIGNATURE_LEN+in_buffer_Len,m_Encryptdata,Encrypt_Len,info)==FALSE)
 	{
 		LOG(ERROR)<<T2A(info);
 		if(m_signeddata!=NULL)
@@ -264,9 +246,9 @@ bool CUsbKeyOperation::SignedEncrypt(unsigned char *in_buffer, int in_buffer_Len
 	//第五步：组合一个34字节帧头
 	//通信帧    = 帧头+数据区
 	//帧头      = 2字节（标志：申请公钥=“00”;验证UKID="01"）+12字节（UKID）+16字节（保留）+4字节（数据区的长度）
-	out_buffer_Len=DATA_BEGIN_POS+Encrypt_Len;
-	*out_buffer= (unsigned char *)malloc(out_buffer_Len);
-	memset(*out_buffer,NULL,out_buffer_Len);
+	out_buffer_len=VERIFY_DATA_PKT_HDR_LEN+Encrypt_Len;
+	*out_buffer= (unsigned char *)malloc(out_buffer_len);
+	memset(*out_buffer,NULL,out_buffer_len);
 	//5.1  "10"是加密交易标志
 	/*memset(*out_buffer,'1',1);
 	memset(*out_buffer+1,'0',1);*/
@@ -280,9 +262,9 @@ bool CUsbKeyOperation::SignedEncrypt(unsigned char *in_buffer, int in_buffer_Len
 	memset((*out_buffer)+BZ_LEN+UKID_LEN,RESERVE_Char,RESERVE_LEN);
 	//5.4  4字节（数据区的长度）
     TempData.myint32=Encrypt_Len;
-	memcpy((*out_buffer)+DATA_BEGIN_POS-DATASize_LEN,TempData.mychars,DATASize_LEN);	
+	memcpy((*out_buffer)+VERIFY_DATA_PKT_HDR_LEN-DATASize_LEN,TempData.mychars,DATASize_LEN);	
 	//5.5 拷贝密文
-	memcpy((*out_buffer)+DATA_BEGIN_POS,m_Encryptdata,Encrypt_Len);
+	memcpy((*out_buffer)+VERIFY_DATA_PKT_HDR_LEN,m_Encryptdata,Encrypt_Len);
 	//第六步：清理本函数建立的临时缓冲区，其中out_buffer不用清理
 	if(m_signeddata!=NULL)
 	{
@@ -325,114 +307,146 @@ void CUsbKeyOperation::GetErroInfo(unsigned char revbuffer[],int reclen,CString 
 
 
 // 对带帧头的通信包进行解密处理（先解密，再验证签名）后，形成数据区
-bool CUsbKeyOperation::DecryptVerify(unsigned char *in_buffer, int in_buffer_Len, char &RetState,unsigned char** out_buffer, int &out_buffer_Len,CString &erro)
+int CUsbKeyOperation::DecryptVerify(unsigned char *in_buffer, int in_buffer_Len, 
+									 char &RetState,unsigned char** out_buffer, 
+									 int &out_buffer_len,CString &erro)
 {
 	USES_CONVERSION;
+	int ret = 0;
 	/*char * key_buffer = NULL;
 	key_buffer = (char *)malloc(key_length);*/
 	CString info;//提示信息
-	if(in_buffer_Len<=DATA_BEGIN_POS ||NULL==in_buffer)
+
+	int pkt_hdr_len_without_playload_len =0; 
+	pkt_hdr_len_without_playload_len = VERIFY_DATA_PKT_HDR_LEN - PAYLOAD_LEN;
+	if(pkt_hdr_len_without_playload_len >= in_buffer_Len||NULL==in_buffer)
 	{
 		LOG(ERROR)<<"Recv Buffer:"<<in_buffer;
 		//LOG(ERROR)<<"接收的下行通信包没有发现被加密的数据区,所以无法完成数据区解密";	
 		LOG(ERROR)<<"We failed to decrypt data because there are not the encrypted data area in recv buffer. ";	
-        GetErroInfo(in_buffer,in_buffer_Len,info);
-		LOG(ERROR)<<T2A(info);	
-		erro = info;
-		return false;
+		erro = _T("接收的下行通信包没有发现被加密的数据区,所以无法完成数据区解密");
+		return -1;
 	}
+
+
 	//首先：UK设备联结
 	if(m_ET199.ConnectDev(_T(UK_PIN),info)==FALSE)
 	{
 		LOG(ERROR)<<T2A(info);
 		//AfxMessageBox(info);
-		return false;
+		return -1;
 	}	
 	/////////////////////////////////////////////////////////////
 	//第一步：对帧头进行处理
 	//1.1  获取UKID码	
-	unsigned char UKIDStr[UKID_LEN+1];
-	memset(UKIDStr,NULL,UKID_LEN+1);
-	if(m_ET199.GetData(_T(UKIDNAME),TRUE,UKIDStr,UKID_LEN,info)!=UKID_LEN)
-	{
-		LOG(ERROR)<<T2A(info);
-		m_ET199.DisConnectDev();
-		//AfxMessageBox(info);
-		return false;
-	}
+	//unsigned char UKIDStr[UKID_LEN+1];
+	//memset(UKIDStr,NULL,UKID_LEN+1);
+	//if(m_et199.getdata(_t(ukidname),true,ukidstr,ukid_len,info)!=ukid_len)
+	//{
+	//	log(error)<<t2a(info);
+	//	m_et199.disconnectdev();
+	//	afxmessagebox(info);
+	//	return false;
+	//}
 	//1.2  对返回码的ukid一致性进行校验
-	for(int i=0;i<UKID_LEN;i++)
-	{
-		if(UKIDStr[i]!=in_buffer[BZ_LEN+i])
-		{
-			LOG(ERROR)<<"UKID不一致,"<<UKIDStr<<"不等于"<<in_buffer+BZ_LEN;
-		}
-	}
+	//for(int i=0;i<ukid_len;i++)
+	//{
+	//	if(ukidstr[i]!=in_buffer[bz_len+i])
+	//	{
+	//		log(error)<<"ukid不一致,"<<ukidstr<<"不等于"<<in_buffer+bz_len;
+	//	}
+	//}
 	//1.3  获取返回帧的工作状态
-	RetState=in_buffer[BZ_LEN+UKID_LEN];//帧头保留区第一个字节存放状态
-	switch(RetState)
-	{
-		case '0':
-			//工作正常
-			break;
-		default:
-			m_ET199.DisConnectDev();
-			return false;
-	}
+	//retstate=in_buffer[bz_len+ukid_len];//帧头保留区第一个字节存放状态
+	//switch(retstate)
+	//{
+	//	case '0':
+	//		工作正常
+	//		break;
+	//	default:
+	//		m_et199.disconnectdev();
+	//		return false;
+	//}
 	//第二步：对帧头30字节以后数据区进行解密
 	//预设解密数据肯定比加密的数据小
-	DWORD dataLen=in_buffer_Len+128;
-	unsigned char *m_Decryptdata=new unsigned char[dataLen+1];
-	if(m_ET199.RSA_Decrypt(in_buffer+DATA_BEGIN_POS,in_buffer_Len-DATA_BEGIN_POS,m_Decryptdata,dataLen,info)==FALSE)
-	{
-		info.Format(_T("发送成功，但对返回码解密失败"));
-		LOG(ERROR)<<T2A(info);
-		m_ET199.DisConnectDev();
-		return false;
+	int assume_plain_data_len = in_buffer_Len+DECRYPT_BUFFER_PADDING;
+	unsigned char *plain_data= NULL;
+	plain_data = (unsigned char*)malloc(assume_plain_data_len);
+	if(NULL==plain_data){
+		LOG(ERROR)<<"malloc memory, failed.";
+		ret = -1;
+		goto DecryptVerify_END;
 	}
-	//第三步：获取签名码后的原始数据
-	out_buffer_Len=dataLen-SignedData_LEN;
-	*out_buffer= (unsigned char *)malloc(out_buffer_Len+1);
-	memset(*out_buffer,NULL,out_buffer_Len+1);
-	memcpy((*out_buffer),m_Decryptdata+SignedData_LEN,out_buffer_Len);
+	memset(plain_data, 0, assume_plain_data_len);
+	DWORD plain_data_len;
+
+	if(FALSE == m_ET199.RSA_Decrypt(in_buffer+VERIFY_DATA_PKT_HDR_LEN,
+		in_buffer_Len-VERIFY_DATA_PKT_HDR_LEN,
+		plain_data,plain_data_len,info))
+	{
+		info.Format(_T("解密失败"));
+		LOG(ERROR)<<T2A(info);
+		ret = -1;
+		goto DecryptVerify_END;
+	}
+	//第三步：获取原始TEXT数据
+	out_buffer_len=plain_data_len-SIGNATURE_LEN;
+	*out_buffer= (unsigned char *)malloc(out_buffer_len+1);
+	if(NULL==*out_buffer){
+		ret = -1;
+		goto DecryptVerify_END;
+	}
+	memset(*out_buffer,NULL,out_buffer_len+1);
+	memcpy((*out_buffer),plain_data+SIGNATURE_LEN,out_buffer_len);
+
 	//第三步：对原始数据进行散列处理
-	DWORD MsgSHA1_Len=SHA1_LEN+1;
-	unsigned char m_MsgSHA1[SHA1_LEN+1];
-	if(m_ET199.RSA_Digest(*out_buffer,out_buffer_Len,m_MsgSHA1,SHA1_LEN+1,MsgSHA1_Len,info)==FALSE)
+	DWORD MsgSHA1_Len=SHA1_LEN;
+	unsigned char MsgSHA1[SHA1_LEN];
+	memset(MsgSHA1, 0, SHA1_LEN);
+	if(FALSE == m_ET199.RSA_Digest(*out_buffer,out_buffer_len,MsgSHA1,SHA1_LEN,MsgSHA1_Len,info))
 	{
-		info.Format(_T("发送成功，但对返回码的数据制造散列时失败"));
+		info.Format(_T("SHA1散列时失败."));
 		LOG(ERROR)<<T2A(info);
-		if(m_Decryptdata!=NULL)
-		{
-			delete[] m_Decryptdata;
-			m_Decryptdata=NULL;
-		}	
-		m_ET199.DisConnectDev();
-		return false;
+		ret = -1;
+		goto DecryptVerify_END;
 	}
-	m_MsgSHA1[MsgSHA1_Len]=NULL;
+
 	//第四步：对散列数据进行签名校验
-	DWORD SignedData_Len=SignedData_LEN;
-	if(m_ET199.RSA_Verify_PublicKey(m_bServerPublic,m_MsgSHA1,MsgSHA1_Len,m_Decryptdata,SignedData_LEN,info)==FALSE)
+
+	//malloc the signature buffer and copy the signature from the recv pkt.
+	unsigned char *pkt_signature = NULL;
+	pkt_signature = (unsigned char*)malloc(SIGNATURE_LEN);
+	if(FALSE==pkt_signature){
+		ret = -1;
+		goto DecryptVerify_END;
+	}else{
+		memset(pkt_signature,0, SIGNATURE_LEN);
+		memcpy(pkt_signature, plain_data, SIGNATURE_LEN);
+	}
+	if(FALSE==m_ET199.RSA_Verify_PublicKey(TRUE,MsgSHA1,MsgSHA1_Len,pkt_signature,SIGNATURE_LEN,info))
 	{
-		info.Format(_T("发送成功，但对返回码的数据进行签名校验时失败"));
+		info.Format(_T("返回数据进行签名校验时失败."));
 		LOG(ERROR)<<T2A(info);
-		if(m_Decryptdata!=NULL)
-		{
-			delete[] m_Decryptdata;
-			m_Decryptdata=NULL;
-		}	
-		m_ET199.DisConnectDev();
-		return false;
+
+		ret = -1;
+		goto DecryptVerify_END;
 	}	 
-	//第五步：清理本函数建立的临时缓冲区，其中out_buffer不用清理
-	if(m_Decryptdata!=NULL)
+	else{
+		ret = 1;
+	}
+	//第五步：释放临时缓冲区，其中out_buffer不清理
+DecryptVerify_END:
+	if(plain_data!=NULL)
 	{
-		delete[] m_Decryptdata;
-		m_Decryptdata=NULL;
+		free(plain_data);
+		plain_data=NULL;
 	}	
+	if(NULL!=pkt_signature){
+		free(pkt_signature);
+		pkt_signature = NULL;
+	}
 	m_ET199.DisConnectDev();
-	return true;
+	return ret;
 }
 
 CString CUsbKeyOperation::GetTerminalID(CString &info)

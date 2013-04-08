@@ -1,5 +1,6 @@
 release
 debug
+gz_lian_activex_sign_tools
 ChargeClientActiveX/Debug/
 ChargeClientActiveX/Release/
 *.[oa]
@@ -12,5 +13,11 @@ ChargeClientActiveX/Release/
 *.bak
 *.htm
 *.zip
+*.cab
+*.ocx
+*.dll
+
+
+
 
 

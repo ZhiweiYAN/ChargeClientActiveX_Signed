@@ -23,4 +23,8 @@ public:
 public:
 	// The content in memory into HEX String
 	CString hex2str(char* hex, int hex_len );
+public:
+	int GetDbDownloadFlag(void);
+public:
+	int SetDbDownloadFlag(int down);
 };

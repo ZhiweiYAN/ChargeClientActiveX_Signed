@@ -517,3 +517,48 @@ CString CBerkeleyDB::hex2str(char* hex, int hex_len)
 	return ret;
 
 }
+// If the value of return clause equals 1, it will conduct a download action.
+int CBerkeleyDB::GetDbDownloadFlag(void)
+{
+	int ret = 0;
+	int len = 0;
+	char *data = NULL;
+	USES_CONVERSION;
+
+	data = (char*)malloc(MAX_STRING_LENGTH);
+	CHECK(NULL!=data)<<"Malloc Mem --> [failed].";
+	memset(data, 0, MAX_STRING_LENGTH);
+
+	GetDataByKeyFromDB(_T(DB_DOWNLOAD_FLAG_KEY), &data, &len);
+
+	if(len>=1){
+		CString str = _T("取本地数据库模板标记 成功.");
+		str = str + A2T(data);
+
+		str = A2T(data);
+		if(0==str.CompareNoCase(_T(DB_DOWNLOAD_TRUE))){
+			ret = 1;
+		}
+		else{
+			ret = -1;
+		}
+	}else{
+		ret = -1;
+	}
+
+	free(data);
+	data = NULL;
+	return ret;
+}
+
+int CBerkeleyDB::SetDbDownloadFlag(int down)
+{
+	int ret = 0;
+	if(1 == down){
+		ret = InsertRecordIntoDatabase(_T(DB_DOWNLOAD_FLAG_KEY),_T(DB_DOWNLOAD_TRUE));
+	}
+	else{
+		ret = InsertRecordIntoDatabase(_T(DB_DOWNLOAD_FLAG_KEY),_T(DB_DOWNLOAD_FALSE));
+	}
+	return 0;
+}

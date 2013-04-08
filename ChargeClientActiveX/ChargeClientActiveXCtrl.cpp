@@ -169,16 +169,6 @@ CChargeClientActiveXCtrl::CChargeClientActiveXCtrl()
 	//google::SetLogDestination(google::WARNING,(CHARGE_CLIENT_LOG_WARNING_FILE));
 	google::SetLogDestination(google::WARNING,"");
 
-	/*if(0==init_UKInit_once)
-	{
-	m_usbkey.InitInstance();
-	}
-	else
-	{
-	LOG(INFO)<<"UK have InitInstanced -->[cancel].";
-	}
-	init_UKInit_once++;*/
-
 	// Guarantee the google-log running once
 	// 保证IE运行后，GLOG只能初始化一次，用全局变量来控制的。
 	if(0==init_glog_once){
@@ -199,7 +189,7 @@ CChargeClientActiveXCtrl::CChargeClientActiveXCtrl()
 	ret = _access_s(CHARGE_CLIENT_DOWNLOAD_DB_FILE_NAME,0);
 	if(0 ==ret){
 		LOG(INFO)<<"Great, the DB file exists.";
-		if(-1 == GetDbVersionID())
+		if(-1 == GetDbVersionID() || 1==m_db.GetDbDownloadFlag())
 		{
 			LOG(ERROR)<<"Check local DB version ID, [failed]";
 			DisplayDebugInfoToWebPage(_T("从数据库中,提取本地数据库版本ID,出错.设置自动下载标记 完成"));
@@ -265,6 +255,7 @@ void CChargeClientActiveXCtrl::OnDraw(CDC* pdc, const CRect& rcBounds, const CRe
 		if(0 == err)
 		{
 			DisplayDebugInfoToWebPage( _T("自动 下载本地数据库文件 正常.") );
+			m_db.SetDbDownloadFlag(0);
 		}
 		else
 		{
@@ -481,6 +472,9 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 	key.Empty();
 	key = _T(COMMON_PKT_HEADR_TEMPLATE);
 	err = m_db.GetDataByKeyFromDB(key, &field_data_pointer, &field_data_length);
+	if(0!=err){
+		m_db.SetDbDownloadFlag(1);
+	}
 	CHECK(0==err)<<"Find common_packet_header_template in DB --> [NO Found].";
 	common_packet_header_template = field_data_pointer;
 	if(NULL!=field_data_pointer){
@@ -505,6 +499,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 		//增加新业务时，在旧数据库中无法查询到指定企业数据包模板
 		LOG(ERROR)<<"Find packet_forward_template in DB --> [NO Found]";
 		DisplayDebugInfoToWebPage(_T("在旧数据库中无法查询到指定企业数据包模板.请手动下载新数据库"));
+		m_db.SetDbDownloadFlag(1);
 		download_db_flag=1;
 		AfxMessageBox(ERRO_DOWNLOAD_DB);
 		m_sys.ExitProc();
@@ -731,7 +726,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 				//err = Function_uncrypted_unsigned(char* signed_crypted_recv_pkt, int signed_crypted_recv_pkt_len, 
 				//	char* *uncrypted_unsigned_recv_pkt, int* uncrypted_unsigned_recv_pkt_len);
 				m_usbkey.InitInstance();
-				BOOL ret_usb_key = false;
+				int ret_usb_key = 0;
 				ret_usb_key = m_usbkey.DecryptVerify((unsigned char*)signed_crypted_recv_pkt, signed_crypted_recv_pkt_len,
 					ret_state,
 					(unsigned char* * )&uncrypted_unsigned_recv_pkt,uncrypted_unsigned_recv_pkt_len,res_str);
@@ -741,7 +736,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 				DisplayDebugInfoToWebPage( res_str );
 				LOG(INFO)<<"uncrypted_unsigned_recv_pkt_len"<<uncrypted_unsigned_recv_pkt_len;
 				LOG(INFO)<<"uncrypted_unsigned_recv_pkt"<<T2A(m_db.hex2str(uncrypted_unsigned_recv_pkt,uncrypted_unsigned_recv_pkt_len));
-				
+
 				//Here, we can release the recv buffer.
 				if(NULL!= signed_crypted_recv_pkt){
 					LOG(INFO)<<"Free memory, signed_crypted_recv_pkt";
@@ -750,9 +745,9 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 					signed_crypted_recv_pkt_len = 0;
 				}
 
-				if (false == ret_usb_key){
+				if (-1 == ret_usb_key){
 					err=-1;
-					AfxMessageBox(res_str,MB_OK, 0);	
+					//AfxMessageBox(res_str.Trim(),MB_OK, 0);
 				}
 
 
@@ -822,6 +817,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 		//增加新业务时，在旧数据库中无法查询到指定企业数据包模板
 		LOG(ERROR)<<"Find backward_packet_template in DB --> [NO Found]";
 		DisplayDebugInfoToWebPage(_T("在旧数据库中无法查询到指定企业数据包模板.请手动下载新数据库"));
+		m_db.SetDbDownloadFlag(1);
 		download_db_flag=1;
 		AfxMessageBox(ERRO_DOWNLOAD_DB);
 		m_sys.ExitProc();
@@ -847,6 +843,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 		LOG(ERROR)<<"Receiving Packet field number is not valid";
 		DisplayDebugInfoToWebPage(_T("企业数据包模版不完整造成解析失败.请手动下载新数据库"));
 		download_db_flag=1;
+		m_db.SetDbDownloadFlag(1);
 		AfxMessageBox(ERRO_DOWNLOAD_DB);
 		m_sys.ExitProc();
 		return;
