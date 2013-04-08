@@ -1,0 +1,242 @@
+<!-- 头部分开始 --> 
+<head> 
+<meta content="text/html; charset=UTF-8" http-equiv="content-type">
+<title>广州市移动 联动信网 空中充值 </title>
+
+<!-- CSS 网页的布局与格式 --> 
+<link rel="stylesheet" type="text/css" media="screen" href="../css/common_interface.css" charset="UTF-8">
+
+<!-- JavaScript 第三方库 --> 
+<SCRIPT type="text/javascript" src="../common_js/jquery-1.3.2.js">
+</SCRIPT>
+<SCRIPT type="text/javascript" src="../common_js/jquery.printf.js" charset="UTF-8">
+</SCRIPT> 
+<SCRIPT type="text/javascript" src="../common_js/date_format.js" charset="UTF-8">
+</SCRIPT> 
+<SCRIPT type="text/javascript" src="../common_js/string_operation.js" charset="UTF-8">
+</SCRIPT>
+
+<!-- JavaScript 业务相关库 --> 
+<!-- 交费 -->
+<SCRIPT type="text/javascript" src="./mobile_gz_cecunet_js/mobile_gz_cecunet_charge.js" charset="UTF-8">
+</SCRIPT> 
+<!-- 返销（冲正） -->
+<SCRIPT type="text/javascript" src="./mobile_gz_cecunet_js/mobile_gz_cecunet_reversal.js" charset="UTF-8">
+</SCRIPT> 
+<!-- 交费结果查询 -->
+
+<!-- 页面上用于显示OCX的内部信息,请保留,勿删除.--> 
+<script 
+for="ChargeClientActiveX1" event="DisplayAtPosition(args)"> {
+//页面上用于显示OCX的内部信息,请保留,勿删除. 
+var position="print_here" + args; 
+document.getElementById(position).insertAdjacentHTML('beforeBegin',ChargeClientActiveX1.OutputParameterA);} </script> 
+</head> 
+<!-- 头部分结束 -->
+<body > 
+
+<!-- 通过表格来控制页面 -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%"> 
+<tbody> 
+<!-- 表格A第 1 行 -->
+<!-- tr = table row, td = table data or table cell -->
+<tr> 
+    <td>
+        <!-- 大表格A中的表格B -->
+        <!-- 表格B中填写的是此项业务的LOGO图片,业务的名称,及所使用的OCX控件的名称 -->
+        <table border="0" width="100%"> 
+        <tbody> 
+            <tr> 
+                <td width="15%" > </td> 
+                <td> <img src="./images/mobile_gz_logo.gif"> </td> 
+                <td width="80%"> <b class="title">广州移动 联动信网 充值 </b> </td>
+                <td bgcolor="#FFFFFF"> 
+                    <div> 
+                    <object id="ChargeClientActiveX1" width='115' height='25' 
+                            classid="CLSID:40A92D87-2FD0-40F7-95B0-A3EE1EE8B7B6" 
+                            codebase="../ocx/ChargeClientActiveX.cab#version=1,0,2,0">
+                    <param name="_Version" value="65536"> 
+                    <param name="_ExtentX" value="2646"> 
+                    <param name="_ExtentY" value="1323"> 
+                    <param name="_StockProps" value="0"> 
+                   </object> 
+                   </div> 
+                </td> 
+            </tr> 
+        </tbody> 
+        </table> 
+        <!-- 表格B结束 -->
+    </td> 
+</tr> 
+<!-- 表格A的第一行结束 -->
+
+<!-- 表格A的第二行 -->
+<tr> 
+    <td> <hr> </td> 
+</tr> 
+<!-- 交费功能 -->
+<!-- 表格A的第三行 -->
+<tr>
+    <td> 
+        <!-- 表格A中表格C -->
+        <table align="center" border="0" cellpadding="0" cellspacing="0"> 
+        <tbody> 
+            <!-- 表格C中的第一行 -->
+            <tr> 
+                <!-- 表格C中的第1行 第1列 -->
+                <td> 
+                <div class="charge"> 
+                <br> 
+                <label class="charge">电话号码: </label> 
+                <input class="charge" name="charge_phone_number" value="13607643889" 
+                    onMouseOver="this.focus()" onFocus="this.select()" /> 
+                <br> 
+
+                <label class="charge">缴费金额: </label> 
+                <input id="charge_input" class="charge" name="charge_money" 
+                    value="1.00" onMouseOver="this.focus()" 
+                    onFocus="this.select()" 
+                    onKeyDown="if(event.keyCode==13)Charge_PassParameter();" />
+                <label class="charge">元</label> 
+                <br> 
+
+                <button id="charge_button" class="charge" type="button" 
+                    onClick="Clear_ChargeResults();Charge_PassParameter()" >① 缴费</button> 
+                </div> 
+                </td> 
+
+                <!-- 表格C中的第1行 第2列 -->
+                <td> 
+                   <!-- 表格C中的表格 D -->
+                   <table class="charge_result"> 
+                   <tbody> 
+                       <tr> 
+                       <td> 电话号码: </td> <td id="print_charge_phone_number"> </td> 
+                       </tr> 
+                       <tr> 
+                       <td> 缴费金额: </td> <td id="print_charge_money"> </td> 
+                       </tr> 
+
+                       <!-- <tr> 
+                       <td> 利安流水: </td> <td id="print_charge_la_sn"> </td> 
+                       </tr> -->
+ 
+                       <tr> 
+                       <td> 移动流水: </td> <td id="print_charge_cecunet_sn"> </td> 
+                       </tr>
+                       <tr>
+                       <td> 交费结果: </td> <td id="print_charge_result"> </td> 
+                       </tr> 
+                   </tbody> 
+                   </table> 
+                   <!-- 表格D 结束 -->
+                </td> 
+             </tr> 
+             <!-- 表格C中的第 一 行 结束-->
+
+             <!-- 表格C中的第 2 行 -->
+             <tr> </tr> 
+
+             <!-- 表格C中的第 3 行 -->
+             <tr > 
+             <!-- <td>
+             <div class="flip">鼠标单击 此处的文字， 显示（或隐藏） 返销功能</div>　
+             </td> -->
+             </tr>
+         </tbody> 
+         </table> 
+         <!-- 表格 C 结束 -->
+    </td> 
+</tr>
+<!-- 表格A中的第 3 行 结束 -->
+
+<!-- 返销的功能 -->
+<!-- 表格A中的第 4 行  -->
+<tr >
+    <td >
+        <table id="reversal" align="center" border="0" cellpadding="0" cellspacing="0"> 
+        <tbody> 
+        <tr> 
+            <td>
+                <div class="reversal"> 
+                <br> 
+                <label class="reversal">缴费金额: </label> 
+                <input class="reversal" name="reversal_money" value="0.00" 
+                    onMouseOver="this.focus()" onFocus="this.select()" 
+                    onClick=" reversal_button.disabled=false; reversal_button.style.background='#000000';" 
+                 onChange="reversal_button.disabled=false; reversal_button.style.background='#000000'; " /> 
+
+                <label class="reversal">元</label> 
+                <label class="reversal">电话号码: </label> 
+                <input class="reversal" name="reversal_phone_number" value="0" 
+                    onMouseOver="this.focus()" onFocus="this.select()" 
+                onClick=" reversal_button.disabled=false; reversal_button.style.background='#000000'; " 
+                  onChange="reversal_button.disabled=false; reversal_button.style.background='#000000'; "/> 
+                <br /> 
+                <!-- <label class="reversal">利安流水: </label> 
+                <input class="reversal" name="reversal_la_sn" value="0" 
+                   onMouseOver="this.focus()"  
+                   onFocus="this.select();reversal_button.disabled=false; 
+                            reversal_button.style.background='#000000'; " 
+                   onChange="reversal_button.disabled=false; 
+                             reversal_button.style.background='#000000'; " /> 
+                <br /> -->
+                <label class="reversal">移动流水: </label> 
+                <input class="reversal" name="reversal_cecunet_sn" value="0" 
+                   onMouseOver="this.focus()"  
+                   onFocus="this.select();reversal_button.disabled=false; 
+                            reversal_button.style.background='#000000'; " 
+                   onChange="reversal_button.disabled=false; 
+                             reversal_button.style.background='#000000'; " /> 
+                <br /> 				
+                <button id="reversal_button" class="reversal" type="button" 
+                    onClick="Clear_ReversalResults();Reversal_PassParameter()" disabled > 返 销</button> 
+                </div> 
+            </td> 
+
+            <td> 
+                <table class="reversal_result"> 
+                <tbody> 
+                <tr> 
+                    <td> 返销号码: </td> <td id="print_reversal_phone_number"> </td> 
+                </tr> 
+                <tr> 
+                    <td> 返销流水: </td> <td id="print_reversal_sn"> </td> 
+                </tr> 
+                <tr> 
+                    <td> 返销金额: </td> <td id="print_reversal_money"> </td> 
+                </tr> 
+                <tr>
+					<td> 返销结果: </td> <td id="print_reversal_result"> </td> 
+                </tr> 
+                </tbody> 
+                </table> 
+            </td> 
+        </tr> 
+        </tbody> 
+        </table> 
+    </td>
+</tr> 
+<!-- 表格A中的第 4 行 结束 -->
+
+
+<tr> 
+    <td> <hr> </td> 
+</tr> 
+<!-- 表格A中的第 5 行 结束 -->
+
+<tr> 
+    <td valign="bottom"> 
+    <div class="loginfo"> 
+        <p id="print_here911"> </p> 
+    </div> 
+    </td> 
+</tr> 
+<!-- 表格A中的第 6 行 结束 -->
+
+</tbody> 
+</table> 
+<!-- 大表格A结束 -->
+
+</body>
+

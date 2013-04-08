@@ -1,0 +1,191 @@
+b.title {
+    font-family: "宋体";
+    font-size: 28px;
+    background-color: #FFFFFF;
+    color: MidnightBlue;
+    padding-top: 0px;
+    *padding-top: 2px;
+    _padding-top: 2px;
+	margin-left: 5px;
+}
+
+<!-- 查询用的CSS -->
+div.query {
+    line-height: 30px;
+    margin-top: 1px;
+    background: #4c6aaa;
+    border: 1px solid white;
+    width:450px;
+    height:160px;
+
+}
+label.query {
+    margin-left: 10px;
+    *+margin-top: 10px;
+    color: AliceBlue;
+    font-family: "宋体";
+    font-size: 22px;
+}
+input.query {
+    margin-left: 0px;
+    *+margin-top: 10px;
+    color: #000000;
+    font-family: arial;
+    font-size: 25px;
+    border: 1px solid black;
+    margin: 0;
+    *+vertical-align: bottom;
+    *+margin-top: -2px;
+    _vertical-align: middle;
+}
+button.query {
+    margin-top: 15px;
+    margin-left: 250px;
+    margin-bottom: 15px;
+    width: 150;
+    height: 40px;
+    background: MidnightBlue;
+    font-family: "宋体";
+    font-size: 20px;
+    color: AliceBlue;
+}
+table.query_result {
+    margin-top: 0px;
+    margin-left:20px;
+    font-family: "Pmingliu",verdana,arial,sans-serif;;
+    color: AliceBlue;
+    font-size: 18px;
+    background-color: #4c6aaa;
+    border: 1px solid white;
+    height: 160px;
+    width: 350px;
+}
+
+<!-- 交费用的CSS -->
+div.charge {
+    line-height: 30px;
+    margin-top: 1px;
+    background: brown;
+    border: 1px solid white;
+    width:450px;
+    height:160px;
+}
+label.charge {
+    margin-left: 10px;
+    *+margin-top: 10px;
+    color: AliceBlue;
+    font-family: "宋体";
+    font-size: 22px;
+}
+input.charge {
+    margin-left: 0px;
+    *+margin-top: 10px;
+    color: #000000;
+    font-family: arial;
+    font-size: 25px;
+    border: 1px solid black;
+    margin: 0;
+    *+vertical-align: bottom;
+    *+margin-top: -2px;
+    _vertical-align: middle;
+}
+button.charge {
+    margin-top: 15px;
+    margin-left: 250px;
+    margin-bottom: 15px;
+    width: 150;
+    height: 40px;
+    background: MidnightBlue;
+    font-family: "宋体";
+    font-size: 20px;
+    color: AliceBlue;
+}
+table.charge_result {
+    margin-top: 0px;
+    margin-left:20px;
+    font-family: "Pmingliu",verdana,arial,sans-serif;;
+    color: #FFFFFF;
+    font-size: 18px;
+    background-color: brown;
+    border: 1px solid white;
+    height: 160px;
+    width: 350px;
+}
+
+<!-- 返销用的CSS -->
+div.reversal {
+    line-height: 30px;
+    margin-top: 1px;
+    background: #4c4c4c;
+    border: 1px solid white;
+    width:450px;
+    height:240px;
+}
+label.reversal {
+    margin-left: 10px;
+    *+margin-top: 10px;
+    color: AliceBlue;
+    font-family: "宋体";
+    font-size: 22px;
+}
+input.reversal {
+    margin-left: 0px;
+    *+margin-top: 10px;
+    color: #000000;
+    font-family: arial;
+    font-size: 25px;
+    border: 1px solid black;
+    margin: 0;
+    *+vertical-align: bottom;
+    *+margin-top: -2px;
+    _vertical-align: middle;
+}
+button.reversal {
+    margin-top: 15px;
+    margin-left: 250px;
+    margin-bottom: 15px;
+    width: 150;
+    height: 40px;
+    background: #f5f5f5;
+    font-family: "宋体";
+    font-size: 20px;
+    color: AliceBlue;
+}
+table.reversal_result {
+    margin-top: 0px;
+    margin-left:20px;
+    font-family: "Pmingliu",verdana,arial,sans-serif;;
+    color: AliceBlue;
+    font-size: 18px;
+    background-color: #4c4c4c;
+    border: 1px solid white;
+    height: 240px;
+    width: 350px;
+}
+
+div.loginfo {
+    *+vertical-align: middle;
+    font-family: "Pmingliu",verdana,arial,sans-serif;
+    font-size: 11px;
+    background: #333333;
+    color: #FFFFFF;
+    margin-top:20px;
+    line-height: 20px;
+}
+
+div.panel,div.flip
+{
+margin: 1px;
+padding:0 px;
+text-align:center;
+background:#4c4c4c;
+border:solid 1px #4c4c4c;
+color: AliceBlue;
+font-family: "宋体";
+font-size: 14px;
+}
+div.panel
+{
+height:120px;
+display:none;
+}
