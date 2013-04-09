@@ -2,7 +2,7 @@
 // ------ DEBUG INFO BEGIN ------
 //If the debug flag is set "ON", the log will be wroten.
 //After we finished the debug process, we should remove the lines.
-// ChargeClientActiveX1.InputParameterDebugFlag="DEBUG_ON";
+ ChargeClientActiveX1.InputParameterDebugFlag="DEBUG_ON";
  //ChargeClientActiveX1.InputParameterDebugFlag="DEBUG_OFF";
 
 // The flag "debugger" is set for VS 2005 studio
@@ -101,8 +101,8 @@ td = document.getElementById("print_charge_phone_number");
 td.innerText= backward_pkt_phone_number;
 td = document.getElementById("print_charge_money")
 td.innerText=backward_pkt_money;
-//td = document.getElementById("print_charge_la_sn");
-//td.innerText= backward_pkt_la_sn;
+td = document.getElementById("print_charge_la_sn");
+td.innerText= backward_pkt_la_sn;
 td = document.getElementById("print_charge_cecunet_sn");
 td.innerText=backward_pkt_cecunet_sn;
 

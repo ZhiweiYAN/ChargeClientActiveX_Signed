@@ -24,7 +24,8 @@
 <SCRIPT type="text/javascript" src="./mobile_gz_cecunet_js/mobile_gz_cecunet_reversal.js" charset="UTF-8">
 </SCRIPT> 
 <!-- 交费结果查询 -->
-
+<SCRIPT type="text/javascript" src="./mobile_gz_cecunet_js/mobile_gz_cecunet_verify.js" charset="UTF-8">
+</SCRIPT> 
 <!-- 页面上用于显示OCX的内部信息,请保留,勿删除.--> 
 <script 
 for="ChargeClientActiveX1" event="DisplayAtPosition(args)"> {
@@ -94,14 +95,14 @@ document.getElementById(position).insertAdjacentHTML('beforeBegin',ChargeClientA
 
                 <label class="charge">缴费金额: </label> 
                 <input id="charge_input" class="charge" name="charge_money" 
-                    value="1.00" onMouseOver="this.focus()" 
+                    value="10.00" onMouseOver="this.focus()" 
                     onFocus="this.select()" 
                     onKeyDown="if(event.keyCode==13)Charge_PassParameter();" />
                 <label class="charge">元</label> 
                 <br> 
 
                 <button id="charge_button" class="charge" type="button" 
-                    onClick="Clear_ChargeResults();Charge_PassParameter()" >① 缴费</button> 
+                    onClick="Clear_ChargeResults();Charge_PassParameter()" >充值缴费</button> 
                 </div> 
                 </td> 
 
@@ -117,9 +118,9 @@ document.getElementById(position).insertAdjacentHTML('beforeBegin',ChargeClientA
                        <td> 缴费金额: </td> <td id="print_charge_money"> </td> 
                        </tr> 
 
-                       <!-- <tr> 
+                       <tr> 
                        <td> 利安流水: </td> <td id="print_charge_la_sn"> </td> 
-                       </tr> -->
+                       </tr>
  
                        <tr> 
                        <td> 移动流水: </td> <td id="print_charge_cecunet_sn"> </td> 
@@ -217,7 +218,60 @@ document.getElementById(position).insertAdjacentHTML('beforeBegin',ChargeClientA
 </tr> 
 <!-- 表格A中的第 4 行 结束 -->
 
+<!-- 表格A中的第 verify 行  -->
+<tr >
+    <td >
+        <table id="verify" align="center" border="0" cellpadding="0" cellspacing="0"> 
+        <tbody> 
+        <tr> 
+            <td>
+                <div class="verify"> 
+                <br> 
+                <label class="verify">利安流水: </label> 
+                <input class="verify" name="verify_la_sn" value="0" 
+                   onMouseOver="this.focus()"  
+                   onFocus="this.select();verify_button.disabled=false; 
+                            ; " 
+                   onChange="verify_button.disabled=false; 
+                            ; " /> 
+				<br />
+                <label class="verify">缴费日期: </label> 
+                <input class="verify" name="verify_charge_date" value="20121231" 
+                   onMouseOver="this.focus()"  
+                   onFocus="this.select();verify_button.disabled=false; 
+                            ; " 
+                   onChange="verify_button.disabled=false; 
+                             ; " /> 							 
+                <br />
+                  <button id="verify_button" class="verify" type="button" 
+                    onClick="Clear_VerifyResults();Verify_PassParameter()" disabled > 查询缴费结果</button> 
+                </div> 
+            </td> 
 
+            <td> 
+                <table class="verify_result"> 
+                <tbody> 
+                <tr> 
+                    <td> 电话号码: </td> <td id="print_verify_phone_number"> </td> 
+                </tr> 
+                <tr> 
+                    <td> 缴费金额: </td> <td id="print_verify_money"> </td> 
+                </tr> 
+                <tr>
+					<td> 缴费日期: </td> <td id="print_verify_charge_date"> </td> 
+                </tr>				
+                <tr>
+					<td> 缴费结果: </td> <td id="print_verify_result"> </td> 
+                </tr> 
+                </tbody> 
+                </table> 
+            </td> 
+        </tr> 
+        </tbody> 
+        </table> 
+    </td>
+</tr> 
+<!-- 表格A中的第 verify 行 结束 -->
 <tr> 
     <td> <hr> </td> 
 </tr> 

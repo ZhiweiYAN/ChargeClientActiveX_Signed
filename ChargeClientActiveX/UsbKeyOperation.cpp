@@ -450,15 +450,15 @@ int CUsbKeyOperation::DecryptVerify(unsigned char *in_buffer, int in_buffer_Len,
 
 	int pkt_hdr_len_without_playload_len =0; 
 	pkt_hdr_len_without_playload_len = VERIFY_DATA_PKT_HDR_LEN - PAYLOAD_LEN;
-	if(pkt_hdr_len_without_playload_len >= in_buffer_Len||NULL==in_buffer)
+	if(pkt_hdr_len_without_playload_len > in_buffer_Len||NULL==in_buffer)
 	{
 		LOG(ERROR)<<"Recv Buffer:"<<in_buffer;
 		//LOG(ERROR)<<"接收的下行通信包没有发现被加密的数据区,所以无法完成数据区解密";	
 		LOG(ERROR)<<"We failed to decrypt data because there are not the encrypted data area in recv buffer. ";	
-		erro = _T("接收的下行通信包没有发现被加密的数据区,所以无法完成数据区解密");
+		//erro = _T("接收的下行通信包没有发现被加密的数据区,所以无法完成数据区解密");
+		
 		return -1;
 	}
-
 
 	//首先：UK设备联结
 	if(m_ET199.ConnectDev(_T(UK_PIN),info)==FALSE)
