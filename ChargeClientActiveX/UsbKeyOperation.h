@@ -95,6 +95,8 @@ public:
 	///////////////////////////////////
 	// 对数据包进行签名、加密处理（先散列，再签名，最后加密）后，形成带帧头的通信包
 	bool SignedEncrypt(unsigned char *in_buffer, int in_buffer_Len, unsigned char** out_buffer, int &out_buffer_Len);
+	bool SignedEncryptPkt(unsigned char *in_buffer, int in_buffer_Len, unsigned char** out_buffer, int &out_buffer_Len);
+
 
 	////////////////////////////////////
 	// 对带帧头的通信包进行解密处理（先解密，再验证签名）后，形成数据区

@@ -196,10 +196,12 @@ bool CUsbKeyOperation::SignedEncrypt(unsigned char *in_buffer, int in_buffer_Len
 		m_ET199.DisConnectDev();
 		return false;
 	}
-	LOG(INFO)<<"散列:"<<T2A(CString(m_MsgSHA1));
-	LOG(INFO)<<"散列处理(16):"<<T2A(nByteTo16Str(MsgSHA1_Len,m_MsgSHA1));
+	//LOG(INFO)<<"散列:"<<T2A(CString(m_MsgSHA1));
+	//LOG(INFO)<<"散列处理(16):"<<T2A(nByteTo16Str(MsgSHA1_Len,m_MsgSHA1));
+
 	//第三步：对散列数据进行签名
-	unsigned char *m_signeddata=new unsigned char[SIGNATURE_LEN+in_buffer_Len+1];	
+	unsigned char *m_signeddata=NULL;
+	m_signeddata = new unsigned char[SIGNATURE_LEN+in_buffer_Len+1];	
 	memset(m_signeddata,NULL,SIGNATURE_LEN+in_buffer_Len+1);
 	//3.1 制造签名
 	DWORD SignedData_Len=SIGNATURE_LEN+1;
@@ -280,6 +282,135 @@ bool CUsbKeyOperation::SignedEncrypt(unsigned char *in_buffer, int in_buffer_Len
 	return true;
 }
 
+
+bool CUsbKeyOperation::SignedEncryptPkt(unsigned char *in_buffer, 
+										int in_buffer_len, 
+										unsigned char** out_buffer, 
+										int &out_buffer_len)
+{
+
+	USES_CONVERSION;
+	BOOL ret = FALSE;
+
+	CString info;//提示信息
+	if(in_buffer_len<1 || in_buffer==NULL)
+	{
+		LOG(ERROR)<<"原始数据长度为0，无法加密";		
+		return false;
+	}
+
+	//UK设备联结
+	if(m_ET199.ConnectDev(_T(UK_PIN),info)==FALSE)
+	{
+		LOG(ERROR)<<T2A(info);
+		return false;
+	}	
+
+	//获取UKID码	
+	unsigned char ukey_id_str[UKID_LEN+1];
+	memset(ukey_id_str,NULL,UKID_LEN+1);
+	if(m_ET199.GetData(_T(UKIDNAME),TRUE,ukey_id_str,UKID_LEN,info)!=UKID_LEN)
+	{
+		LOG(ERROR)<<T2A(info);
+		m_ET199.DisConnectDev();
+		return false;
+	}
+
+	//对明文数据进行SHA1散列，散列后数据长度应该为 （20）SHA1_LEN
+	unsigned char msg_sha1[SHA1_LEN+1];
+	memset(msg_sha1,NULL,SHA1_LEN+1);
+
+	unsigned long int msg_sha1_len = SHA1_LEN;
+	unsigned long int max_msg_sha1_len = 2*SHA1_LEN;
+	
+	if(m_ET199.RSA_Digest(in_buffer,
+		in_buffer_len,
+		msg_sha1, max_msg_sha1_len,
+		msg_sha1_len, info)==FALSE){
+		LOG(ERROR)<<T2A(info);	
+		m_ET199.DisConnectDev();
+		return false;
+	}
+
+	//对sha1的20个字节进行签名，会形成一个128字节(1024bit)的数据区。
+	unsigned char *signature = NULL;
+	signature = (unsigned char*) malloc(SIGNATURE_LEN+1);
+	CHECK(NULL!=signature)<<"malloc memory, failed.";
+	memset(signature, 0, SIGNATURE_LEN+1);
+
+	unsigned long int signature_len = SIGNATURE_LEN;
+
+	ret = m_ET199.RSA_Signed(msg_sha1, msg_sha1_len,signature, signature_len, info);
+	if(FALSE == ret){
+		LOG(ERROR)<<"Adding signature, failed.";
+		goto SignedEncryptPkt_END;
+	}
+
+	int uncrypted_data_len = 0;
+	uncrypted_data_len = signature_len + in_buffer_len;
+
+	unsigned char* uncrypted_data = NULL;
+	uncrypted_data = (unsigned char*)malloc(uncrypted_data_len);
+	CHECK(NULL!=uncrypted_data)<<"malloc memory, failed";
+	memset(uncrypted_data, 0, uncrypted_data_len);
+
+	//combine the signature txt and inbuffer text.
+	memcpy(uncrypted_data, signature, signature_len);
+	memcpy(uncrypted_data+signature_len, in_buffer, in_buffer_len);
+
+	//encrypt the data
+	unsigned char* cipher_buf = NULL;
+	int cipher_buf_len = 0;
+	cipher_buf_len = 2*(signature_len+in_buffer_len);
+	cipher_buf = (unsigned char*)malloc(cipher_buf_len);
+	CHECK(NULL!=cipher_buf);
+	memset(cipher_buf, 0, cipher_buf_len);
+	DWORD cipher_data_len = 0;
+
+	ret = m_ET199.RSA_Encrypt(m_bServerPublic, uncrypted_data, (DWORD)uncrypted_data_len, 
+		cipher_buf, cipher_data_len, info);
+	if(FALSE==ret){
+		LOG(ERROR)<<"Rsa encrypt, failed.";
+		goto SignedEncryptPkt_END;
+	}
+
+	//通信帧    = 帧头+数据区
+	//帧头      = 2字节（标志：申请公钥=“00”;验证UKID="01"）+12字节（UKID）+16字节（保留）+4字节（数据区的长度）
+
+	out_buffer_len = VERIFY_DATA_PKT_HDR_LEN + cipher_data_len;
+	*out_buffer= (unsigned char *)malloc(out_buffer_len);
+	CHECK(NULL!=out_buffer)<<"malloc memory, failed.";
+
+	memset(*out_buffer, ' ', out_buffer_len);
+
+	//trans pkt
+	memcpy(*out_buffer,"10",MSG_TYPE_LEN);
+	//ukey id
+	memcpy((*out_buffer)+MSG_TYPE_LEN, ukey_id_str, UKID_LEN);
+	//pkt_len binary
+	memcpy((*out_buffer)+VERIFY_DATA_PKT_HDR_LEN-PAYLOAD_LEN, &cipher_data_len, 4);
+	//cipher data copy
+	memcpy((*out_buffer)+VERIFY_DATA_PKT_HDR_LEN,cipher_buf,cipher_data_len);
+
+
+SignedEncryptPkt_END:
+	m_ET199.DisConnectDev();
+
+if(NULL!=signature){
+	free(signature);
+	signature = NULL;
+}
+if(NULL!=uncrypted_data){
+    free(uncrypted_data);
+	uncrypted_data = NULL;
+	}
+if(NULL!=cipher_buf){
+	free(cipher_buf);
+	cipher_buf = NULL;
+}
+
+	return true;
+}
 //功能：从接受的缓冲区获取存放的信息对
 //输入：unsigned char revbuffer  接受缓冲区
 //      int reclen

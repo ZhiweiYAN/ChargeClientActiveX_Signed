@@ -665,7 +665,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 			//add here!
 			//Function_signed_crypted(char *msg, int msg_len, char **signed_crypted_send_pkt, int *signed_crypted_send_pkt_len);
 			m_usbkey.InitInstance();
-			BOOL ret_usb_key = m_usbkey.SignedEncrypt((unsigned char *)msg, msg_len, (unsigned char **) &signed_crypted_send_pkt,  signed_crypted_send_pkt_len);
+			BOOL ret_usb_key = m_usbkey.SignedEncryptPkt((unsigned char *)msg, msg_len, (unsigned char **) &signed_crypted_send_pkt,  signed_crypted_send_pkt_len);
 			m_usbkey.ExitInstance();
 			LOG(INFO)<<"original send pkt_len: "<<msg_len<<"original pkt: "<<msg;
 
@@ -810,7 +810,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 		+ m_InputParameterActName +_T("_")
 		+ _T(COM_PKT_DOWN_PKT_TEMPLATE);
 	err = m_db.GetDataByKeyFromDB(key, &field_data_pointer, &field_data_length);
-	//CHECK(0==err)<<"Find backward_packet_template in DB --> [NO Found].";
+	CHECK(0==err)<<"Find backward_packet_template in DB --> [NO Found].";
 	if(-1==err)
 	{
 		LOG(INFO)<< "Find backward_packet_template in DB --> [NO Found].";
