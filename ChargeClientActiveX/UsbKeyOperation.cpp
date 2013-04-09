@@ -371,13 +371,13 @@ int CUsbKeyOperation::DecryptVerify(unsigned char *in_buffer, int in_buffer_Len,
 	//预设解密数据肯定比加密的数据小
 	int assume_plain_data_len = in_buffer_Len+DECRYPT_BUFFER_PADDING;
 	unsigned char *plain_data= NULL;
-	plain_data = (unsigned char*)malloc(assume_plain_data_len);
+	plain_data = (unsigned char*)malloc(assume_plain_data_len + 1);
 	if(NULL==plain_data){
 		LOG(ERROR)<<"malloc memory, failed.";
 		ret = -1;
 		goto DecryptVerify_END;
 	}
-	memset(plain_data, 0, assume_plain_data_len);
+	memset(plain_data, 0, assume_plain_data_len + 1);
 	DWORD plain_data_len;
 
 	if(FALSE == m_ET199.RSA_Decrypt(in_buffer+VERIFY_DATA_PKT_HDR_LEN,
@@ -389,7 +389,7 @@ int CUsbKeyOperation::DecryptVerify(unsigned char *in_buffer, int in_buffer_Len,
 		ret = -1;
 		goto DecryptVerify_END;
 	}
-	//第三步：获取原始TEXT数据
+	//获取原始TEXT数据
 	out_buffer_len=plain_data_len-SIGNATURE_LEN;
 	*out_buffer= (unsigned char *)malloc(out_buffer_len+1);
 	if(NULL==*out_buffer){
@@ -399,11 +399,12 @@ int CUsbKeyOperation::DecryptVerify(unsigned char *in_buffer, int in_buffer_Len,
 	memset(*out_buffer,NULL,out_buffer_len+1);
 	memcpy((*out_buffer),plain_data+SIGNATURE_LEN,out_buffer_len);
 
+
 	//第三步：对原始数据进行散列处理
 	DWORD MsgSHA1_Len=SHA1_LEN;
-	unsigned char MsgSHA1[SHA1_LEN];
-	memset(MsgSHA1, 0, SHA1_LEN);
-	if(FALSE == m_ET199.RSA_Digest(*out_buffer,out_buffer_len,MsgSHA1,SHA1_LEN,MsgSHA1_Len,info))
+	unsigned char MsgSHA1[SHA1_LEN+1];
+	memset(MsgSHA1, 0, SHA1_LEN+1);
+	if(FALSE == m_ET199.RSA_Digest(*out_buffer,out_buffer_len,MsgSHA1,SHA1_LEN+1,MsgSHA1_Len,info))
 	{
 		info.Format(_T("SHA1散列时失败."));
 		LOG(ERROR)<<T2A(info);
@@ -411,24 +412,29 @@ int CUsbKeyOperation::DecryptVerify(unsigned char *in_buffer, int in_buffer_Len,
 		goto DecryptVerify_END;
 	}
 
-	//第四步：对散列数据进行签名校验
+	LOG(INFO)<<MsgSHA1;
 
+	//第四步：对散列数据进行签名校验
 	//malloc the signature buffer and copy the signature from the recv pkt.
-	unsigned char *pkt_signature = NULL;
-	pkt_signature = (unsigned char*)malloc(SIGNATURE_LEN);
-	if(FALSE==pkt_signature){
-		ret = -1;
-		goto DecryptVerify_END;
-	}else{
-		memset(pkt_signature,0, SIGNATURE_LEN);
-		memcpy(pkt_signature, plain_data, SIGNATURE_LEN);
-	}
-	if(FALSE==m_ET199.RSA_Verify_PublicKey(TRUE,MsgSHA1,MsgSHA1_Len,pkt_signature,SIGNATURE_LEN,info))
+	//unsigned char *pkt_signature = NULL;
+	//pkt_signature = (unsigned char*)malloc(SIGNATURE_LEN + 1);
+	//if(FALSE==pkt_signature){
+	//	ret = -1;
+	//	goto DecryptVerify_END;
+	//}else{
+	//	memset(pkt_signature,0, SIGNATURE_LEN +1);
+	//	memcpy(pkt_signature, plain_data, SIGNATURE_LEN);
+	//}
+	DWORD sig_len = SIGNATURE_LEN;
+	unsigned char pkt_signature[SIGNATURE_LEN+1];
+	memset(pkt_signature, 0, SIGNATURE_LEN+1);
+	memcpy(pkt_signature, plain_data, SIGNATURE_LEN);
+	if(FALSE==m_ET199.RSA_Verify_PublicKey(TRUE,MsgSHA1,MsgSHA1_Len,pkt_signature,sig_len,info))
 	{
 		info.Format(_T("返回数据进行签名校验时失败."));
 		LOG(ERROR)<<T2A(info);
 
-		ret = -1;
+		ret = 1;
 		goto DecryptVerify_END;
 	}	 
 	else{
@@ -441,10 +447,10 @@ DecryptVerify_END:
 		free(plain_data);
 		plain_data=NULL;
 	}	
-	if(NULL!=pkt_signature){
-		free(pkt_signature);
-		pkt_signature = NULL;
-	}
+	//if(NULL!=pkt_signature){
+	//	free(pkt_signature);
+	//	pkt_signature = NULL;
+	//}
 	m_ET199.DisConnectDev();
 	return ret;
 }

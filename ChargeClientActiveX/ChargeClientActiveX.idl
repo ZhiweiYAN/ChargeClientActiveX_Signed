@@ -1,0 +1,75 @@
+// ChargeClientActiveX.idl : ActiveX 控件项目的类型库源。
+
+// 此文件将由 MIDL 编译器工具处理以
+// 产生类型库(ChargeClientActiveX.tlb)，该类型库将成为
+// ChargeClientActiveX.ocx 中的资源。
+
+#include <olectl.h>
+#include <idispids.h>
+
+[ uuid(3351A0BA-CB0A-421F-B42A-F8A2BB8BD4A3), version(1.0),
+  helpfile("ChargeClientActiveX.hlp"),
+  helpstring("ChargeClientActiveX ActiveX 控件模块"),
+  control ]
+library ChargeClientActiveXLib
+{
+	importlib(STDOLE_TLB);
+
+	//  CChargeClientActiveXCtrl 的主调度接口
+
+	[ uuid(F5B4C55F-AE4F-4F6B-90E6-6FF861004934),
+	  helpstring("ChargeClientActiveX Control 的调度接口")]
+	dispinterface _DChargeClientActiveX
+	{
+		properties:
+			[id(1) , helpstring("属性 InputParameterA")] BSTR InputParameterA;
+			[id(2) , helpstring("属性 InputParameterB")] BSTR InputParameterB;
+			[id(3) , helpstring("属性 OutputParameterA")] BSTR OutputParameterA;
+			[id(6) , helpstring("属性 InputParameterComName")] BSTR InputParameterComName;
+			[id(7) , helpstring("属性 InputParameterActName")] BSTR InputParameterActName;
+			[id(35) , helpstring("属性 WebOrder")] BSTR WebOrder;
+			[id(39) , helpstring("属性 ActivexErrorCode")] LONG ActivexErrorCode;
+			[id(40) , helpstring("属性 ActivexErrorInfo")] BSTR ActivexErrorInfo;
+	methods:
+		[id(4), helpstring("方法LoadParameter")] void LoadParameter(void);
+		//[id(8), helpstring("方法AddTemplate")] void AddTemplate(BSTR key, LONG key_len, BSTR data, LONG data_Len);
+		//[id(33), helpstring("方法RemoveTemplate")] void RemoveTemplate(BSTR key, LONG key_len);
+		[id(32), propget, helpstring("属性 InputFields")] BSTR InputFields(SHORT field_index);
+		[id(32), propput, helpstring("属性 InputFields")] void InputFields(SHORT field_index, BSTR newVal);
+		[id(34), propget, helpstring("属性 OutputFields")] BSTR OutputFields(SHORT field_index);
+		[id(34), propput, helpstring("属性 OutputFields")] void OutputFields(SHORT field_index, BSTR newVal);
+		[id(36), helpstring("方法TestingFunction")] void TestingFunction(LONG f);
+		[id(37), helpstring("方法PrepareInvoiceItem")] void PrepareInvoiceItem(LONG x, LONG y, BSTR data, LONG data_len);
+		[id(38), helpstring("方法PrintInvoice")] void PrintInvoice(void);
+		[id(41), helpstring("方法GetTerminalID")] BSTR GetTerminalID(void);
+		[id(42), helpstring("方法GetUserID")] BSTR GetUserID(void);
+	};
+
+	//  CChargeClientActiveXCtrl 的事件调度接口
+
+	[ uuid(1893A798-6B36-4A5D-B1EE-FFC0A5E756A9),
+	  helpstring("ChargeClientActiveX Control 的事件接口") ]
+	dispinterface _DChargeClientActiveXEvents
+	{
+		properties:
+			//  事件接口没有任何属性
+
+		methods:
+			[id(1)] void ParameterLoaded(void);
+			[id(2)] void DisplayActivexWorking(void);
+			[id(3)] void DisplayLocalDbWorking(void);
+			[id(4)] void DisplayInternetWorking(void);
+			[id(5)] void DisplayAtPosition(LONG position_idx);
+	};
+
+	//  CChargeClientActiveXCtrl 的类信息
+
+	[ uuid(40A92D87-2FD0-40F7-95B0-A3EE1EE8B7B6),
+	  helpstring("ChargeClientActiveX Control"), control ]
+	coclass ChargeClientActiveX
+	{
+		[default] dispinterface _DChargeClientActiveX;
+		[default, source] dispinterface _DChargeClientActiveXEvents;
+	};
+
+};

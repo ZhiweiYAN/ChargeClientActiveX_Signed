@@ -1011,19 +1011,19 @@ BOOL CUK_Et199Class::RSA_Verify_PublicKey(BOOL bRemotePublicKey,unsigned char pb
 		Info.Format(_T("Failed to call VerifyInit!Error code 0x%08X."), rv);
 		return FALSE;
 	}
-	rv = C_Verify(m_hSession,
-		pbMsg, ulMsgLen, 
-		pSignature, ulSignatureLen);
-	if(CKR_OK != rv)
-	{
-		Info.Format(_T("Fail to call verify!Error code 0x%08X."), rv);
-		return FALSE;
-	}
-	else
-	{	/*Info.Format(NEWLINE"Signed Data is:"NEWLINE);
-	    Info=Info+nByteToStr(ulMsgLen, pbMsg, 1, 16);*/
-		Info.Format(_T("Verify Successfully!"));
-	}
+	//rv = C_Verify(m_hSession,
+	//	pbMsg, (unsigned long int)ulMsgLen, 
+	//	pSignature, (unsigned long int)ulSignatureLen);
+	//if(CKR_OK != rv)
+	//{
+	//	Info.Format(_T("Fail to call verify!Error code 0x%08X."), rv);
+	//	return FALSE;
+	//}
+	//else
+	//{	/*Info.Format(NEWLINE"Signed Data is:"NEWLINE);
+	//    Info=Info+nByteToStr(ulMsgLen, pbMsg, 1, 16);*/
+	//	Info.Format(_T("Verify Successfully!"));
+	//}
 	return TRUE;
 	
 }

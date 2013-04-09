@@ -17,7 +17,7 @@
 
 //目录与文件, folders and files
 #define CHARGE_CLIENT_INSTALL_DIR "c:\\charge_client\0\0"
-#define CHARGE_CLIENT_LOG_FILES   "c:\\charge_client\\log-info-*\0\0\0\0"
+#define CHARGE_CLIENT_LOG_FILES   "c:\\charge_client\\log-*\0\0\0\0"
 #define CHARGE_CLIENT_LOG_INFO_FILE "c:\\charge_client\\log-info-"
 #define CHARGE_CLIENT_LOG_ERROR_FILE "c:\\charge_client\\log-erro-"
 #define CHARGE_CLIENT_LOG_WARNING_FILE "c:\\charge_client\\log-warn-"

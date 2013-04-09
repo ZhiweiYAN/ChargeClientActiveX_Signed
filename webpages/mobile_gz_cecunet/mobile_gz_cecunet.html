@@ -160,6 +160,12 @@ document.getElementById(position).insertAdjacentHTML('beforeBegin',ChargeClientA
             <td>
                 <div class="reversal"> 
                 <br> 
+				<label class="reversal">电话号码: </label> 
+                <input class="reversal" name="reversal_phone_number" value="0" 
+                    onMouseOver="this.focus()" onFocus="this.select()" 
+                onClick=" reversal_button.disabled=false; reversal_button.style.background='#000000'; " 
+                  onChange="reversal_button.disabled=false; reversal_button.style.background='#000000'; "/> 
+                <br /> 
                 <label class="reversal">缴费金额: </label> 
                 <input class="reversal" name="reversal_money" value="0.00" 
                     onMouseOver="this.focus()" onFocus="this.select()" 
@@ -167,12 +173,7 @@ document.getElementById(position).insertAdjacentHTML('beforeBegin',ChargeClientA
                  onChange="reversal_button.disabled=false; reversal_button.style.background='#000000'; " /> 
 
                 <label class="reversal">元</label> 
-                <label class="reversal">电话号码: </label> 
-                <input class="reversal" name="reversal_phone_number" value="0" 
-                    onMouseOver="this.focus()" onFocus="this.select()" 
-                onClick=" reversal_button.disabled=false; reversal_button.style.background='#000000'; " 
-                  onChange="reversal_button.disabled=false; reversal_button.style.background='#000000'; "/> 
-                <br /> 
+
                 <!-- <label class="reversal">利安流水: </label> 
                 <input class="reversal" name="reversal_la_sn" value="0" 
                    onMouseOver="this.focus()"  
@@ -199,9 +200,6 @@ document.getElementById(position).insertAdjacentHTML('beforeBegin',ChargeClientA
                 <tbody> 
                 <tr> 
                     <td> 返销号码: </td> <td id="print_reversal_phone_number"> </td> 
-                </tr> 
-                <tr> 
-                    <td> 返销流水: </td> <td id="print_reversal_sn"> </td> 
                 </tr> 
                 <tr> 
                     <td> 返销金额: </td> <td id="print_reversal_money"> </td> 
