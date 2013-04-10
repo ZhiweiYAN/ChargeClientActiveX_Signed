@@ -2,7 +2,7 @@
 // ------ DEBUG INFO BEGIN ------
 //If the debug flag is set "ON", the log will be wroten.
 //After we finished the debug process, we should remove the lines.
- ChargeClientActiveX1.InputParameterDebugFlag="DEBUG_ON";
+// ChargeClientActiveX1.InputParameterDebugFlag="DEBUG_ON";
  //ChargeClientActiveX1.InputParameterDebugFlag="DEBUG_OFF";
 
 // The flag "debugger" is set for VS 2005 studio
@@ -19,7 +19,7 @@ if (0.001>=parseFloat(money)){
 }
 //assume the length of phone number >=8
 phone_number = charge_phone_number.value;
-phone_number = phone_number.replace(/(^\s*)|(\s*$)/g, "");
+phone_number = phone_number.replace(/\D/g, "");
 if ( 8>phone_number.length) {
     //alert("There are something wrong with the phone number.");
 	alert("号码有误，请检查。");
@@ -134,6 +134,19 @@ ChargeClientActiveX1.PrintInvoice();
 
 }//end of function 'PassChargeParameters()'
 
+//section
+function SegmentPhoneNumber(){
+//debugger;
+var number = charge_phone_number.value;
+var num_length = number.length;
+var formated_phone_number = "00";
+if(num_length==11){
+	var obj_reg_exp = /(\d{3})(\d{4})(\d*)/;
+	formated_phone_number = number.replace(obj_reg_exp, "$1-$2-$3");
+    charge_phone_number.value = formated_phone_number;	
+}
+
+}
 
 function Clear_ChargeResults() {
     $('#print_charge_result').empty(); 

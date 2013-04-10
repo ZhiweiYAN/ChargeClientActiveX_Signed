@@ -90,13 +90,14 @@ document.getElementById(position).insertAdjacentHTML('beforeBegin',ChargeClientA
                 <br> 
                 <label class="charge">电话号码: </label> 
                 <input class="charge" name="charge_phone_number" value="13607643889" 
-                    onMouseOver="this.focus()" onFocus="this.select()" /> 
+                    onMouseOver="this.focus()" onFocus="this.select()"
+                    onChange="SegmentPhoneNumber();"	/> 
                 <br> 
 
                 <label class="charge">缴费金额: </label> 
                 <input id="charge_input" class="charge" name="charge_money" 
-                    value="10.00" onMouseOver="this.focus()" 
-                    onFocus="this.select()" 
+                    value="10" onMouseOver="this.focus()" 
+                    onFocus="this.select();" 
                     onKeyDown="if(event.keyCode==13)Charge_PassParameter();" />
                 <label class="charge">元</label> 
                 <br> 
@@ -140,9 +141,9 @@ document.getElementById(position).insertAdjacentHTML('beforeBegin',ChargeClientA
 
              <!-- 表格C中的第 3 行 -->
              <tr > 
-             <!-- <td>
-             <div class="flip">鼠标单击 此处的文字， 显示（或隐藏） 返销功能</div>　
-             </td> -->
+             <td>
+             <div class="flip">交错「号码」或「金额」，鼠标单击此处，显示/隐藏返销功能</div>　
+             </td> 
              </tr>
          </tbody> 
          </table> 
@@ -174,7 +175,7 @@ document.getElementById(position).insertAdjacentHTML('beforeBegin',ChargeClientA
                  onChange="reversal_button.disabled=false; reversal_button.style.background='#000000'; " /> 
 
                 <label class="reversal">元</label> 
-
+                <br />
                 <!-- <label class="reversal">利安流水: </label> 
                 <input class="reversal" name="reversal_la_sn" value="0" 
                    onMouseOver="this.focus()"  
