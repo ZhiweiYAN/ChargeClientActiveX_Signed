@@ -388,7 +388,11 @@ bool CUsbKeyOperation::SignedEncryptPkt(unsigned char *in_buffer,
 	//ukey id
 	memcpy((*out_buffer)+MSG_TYPE_LEN, ukey_id_str, UKID_LEN);
 	//pkt_len binary
-	memcpy((*out_buffer)+VERIFY_DATA_PKT_HDR_LEN-PAYLOAD_LEN, &cipher_data_len, 4);
+	char cipher_data_len_str[2*PAYLOAD_LEN+1];
+	memset(cipher_data_len_str, 0, 2*PAYLOAD_LEN+1);
+
+	sprintf_s(cipher_data_len_str, 2*PAYLOAD_LEN, "%06d", cipher_data_len);
+	memcpy((*out_buffer)+VERIFY_DATA_PKT_HDR_LEN-PAYLOAD_LEN, cipher_data_len_str, PAYLOAD_LEN);
 	//cipher data copy
 	memcpy((*out_buffer)+VERIFY_DATA_PKT_HDR_LEN,cipher_buf,cipher_data_len);
 

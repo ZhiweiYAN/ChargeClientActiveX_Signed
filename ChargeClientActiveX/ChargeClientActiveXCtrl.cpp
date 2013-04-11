@@ -722,6 +722,33 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 				LOG(INFO)<<"signed_crypted_recv_pkt_len"<<signed_crypted_recv_pkt_len;
 				LOG(INFO)<<"signed_crypted_recv_pkt"<<T2A(m_db.hex2str(signed_crypted_recv_pkt,signed_crypted_recv_pkt_len));
 
+				//Check Error Code in Verify packet header
+				char msg_error_code[MSG_TYPE_LEN]="";
+				memcpy(msg_error_code, signed_crypted_recv_pkt+ACK_INFO_POSITION, MSG_TYPE_LEN);
+				ret =strncmp(NORMAL_MSG_CODE,msg_error_code, MSG_TYPE_LEN);
+				if(0!=ret){
+					VerifyPktHdr *pkt_hdr= NULL;
+					pkt_hdr = (VerifyPktHdr *)signed_crypted_recv_pkt;
+
+					//计算char *数组大小，以字节为单位，一个汉字占两个字节
+					char* sText = pkt_hdr->ack_info;
+					int charLen = ACK_INFO_LEN;
+					//计算多字节字符的大小，按字符计算。
+					int len = MultiByteToWideChar(CP_UTF8,0,sText,charLen,NULL,0);
+					//为宽字节字符数组申请空间，数组大小为按字节计算的多字节字符大小
+					TCHAR *buf = new TCHAR[len + 1];
+					//多字节编码转换成宽字节编码
+					MultiByteToWideChar(CP_UTF8 ,0,sText,charLen,buf,len);
+					buf[len] = '\0'; //添加字符串结尾，注意不是len+1
+					//将TCHAR数组转换为CString
+					CString pWideChar;
+					pWideChar.Append(buf);
+					//删除缓冲区
+					delete []buf;
+					AfxMessageBox(pWideChar.Trim(), MB_OK, 0);
+					SetErrorInfo4Web(ERROR_SERVER_FEEDBACK_CODE);
+					return;
+				}
 				//add here!
 				//err = Function_uncrypted_unsigned(char* signed_crypted_recv_pkt, int signed_crypted_recv_pkt_len, 
 				//	char* *uncrypted_unsigned_recv_pkt, int* uncrypted_unsigned_recv_pkt_len);
@@ -1514,6 +1541,11 @@ void CChargeClientActiveXCtrl::SetErrorInfo4Web(long err_code)
 			m_ActivexErrorCode = OCX_ERR_Work_State_CODE;
 			m_ActivexErrorInfo = _T( OCX_ERR_Work_State_INFO );
 			DisplayDebugInfoToWebPage(_T( OCX_ERR_Work_State_INFO ));
+			break;
+		case ERROR_SERVER_FEEDBACK_CODE:
+			m_ActivexErrorCode = ERROR_SERVER_FEEDBACK_CODE;
+			m_ActivexErrorInfo = _T( ERROR_SERVER_FEEDBACK_INFO );
+			DisplayDebugInfoToWebPage(_T( ERROR_SERVER_FEEDBACK_INFO ));
 			break;
 
 		default:

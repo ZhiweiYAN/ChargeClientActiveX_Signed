@@ -63,7 +63,7 @@
 //定义出错的显示信息, define the error informations
 #define ERRO_DOWNLOAD_DB _T("本地数据库不完整.将关闭浏览器,请重启浏览器后手动下载数据库！")
 #define OCX_ERR_NETWORK_CODE 11
-#define OCX_ERR_NETWORK_INFO "网络通信故障,Socket返回出错. 可能原因是网络不通.\
+#define OCX_ERR_NETWORK_INFO "网络通信故障，可能原因是网络不通或验证服务器不正常.\
 \n(Network failed, and return errors after invoking socket functions.)"
 #define OCX_ERR_USB_KEY_CODE 12
 #define OCX_ERR_USB_KEY_INFO " USB KEY 出错. 可能原因是系统中没有发现合法的USB KEY.\
@@ -71,6 +71,9 @@
 
 #define OCX_ERR_Work_State_CODE 13
 #define OCX_ERR_Work_State_INFO "发送和接收签名和加密解密, 出错."
+
+#define ERROR_SERVER_FEEDBACK_CODE 14
+#define ERROR_SERVER_FEEDBACK_INFO "数据中心服务器端出错."
 
 //页面的显示位置, the position label of web pages
 #define DISPLAY_WEB_POSITION 911L 
