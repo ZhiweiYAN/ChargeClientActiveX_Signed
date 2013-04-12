@@ -75,7 +75,7 @@ if(0!=error_code_ocx){
 }
 
 var error_code_cmn_pkt_hdr = ChargeClientActiveX1.OutputFields(8); 
-if("00"!=error_code_ocx && "  "!=error_code_ocx){
+if("00"!==error_code_cmn_pkt_hdr && "  "!==error_code_cmn_pkt_hdr){
     error_info = ChargeClientActiveX1.OutputFields(9);
     error_info = error_info.replace(/(^\s*)|(\s*$)/g, ""); 
     error_info = "Data Center:" + error_info + "\n";    
@@ -84,7 +84,7 @@ if("00"!=error_code_ocx && "  "!=error_code_ocx){
 }
 //debuger;
 var transaction_response_code = ChargeClientActiveX1.OutputFields(14);
-if ("0000"!= transaction_response_code){
+if ("0000"!== transaction_response_code){
     error_info = "Cecunet error codes:" + transaction_response_code;
     alert(error_info);
     return;

@@ -54,6 +54,7 @@ ChargeClientActiveX1.LoadParameter();
 //Waiting for the packet from the verify server.
 //Waiting ...
 
+//debugger;
 //There are three kinds of error codes.
 var error_info =" ";
 var error_code_ocx = ChargeClientActiveX1.ActivexErrorCode; 
@@ -63,18 +64,18 @@ if(0!=error_code_ocx){
 	alert(error_info);
     return;
 }
-
+//debugger;
 var error_code_cmn_pkt_hdr = ChargeClientActiveX1.OutputFields(8); 
-if("00"!=error_code_ocx && "  "!=error_code_ocx){
+if("00"!==error_code_cmn_pkt_hdr && "  "!==error_code_cmn_pkt_hdr){
     error_info = ChargeClientActiveX1.OutputFields(9);
     error_info = error_info.replace(/(^\s*)|(\s*$)/g, ""); 
     error_info = "Data Center:" + error_info + "\n";    
     alert(error_info);
     return;
 }
-//debuger;
+
 var transaction_response_code = ChargeClientActiveX1.OutputFields(14);
-if ("0000"!= transaction_response_code){
+if ("0000"!== transaction_response_code){
     error_info = "返回包有误。Cecunet error codes:" + transaction_response_code;
     alert(error_info);
     return;
