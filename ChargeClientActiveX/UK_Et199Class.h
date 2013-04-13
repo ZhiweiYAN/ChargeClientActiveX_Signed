@@ -46,8 +46,9 @@ public:
 	//      DWORD &ulSignatureLen       长度
 	//      CString &info               辅助信息
 	//返回：BOOL                        状态
-	BOOL RSA_Signed(unsigned char pbMsg[],DWORD ulMsgLen,
-						unsigned char pSignature[],DWORD &ulSignatureLen,CString &Info);
+	BOOL RSA_Signed(CK_BYTE_PTR pbMsg, CK_ULONG ulMsgLen,
+		CK_BYTE_PTR pSignature, CK_ULONG_PTR ulSignatureLen,
+		CString &Info);
 	
 	///////////////////////////////////////////
 	////////////////////////////////////////////////////
@@ -60,12 +61,12 @@ public:
 	//      DWORD &ulMsgSHA1Len       散列结果长度
 	//      CString &info               辅助信息
 	//返回：BOOL                        状态
-	BOOL RSA_Digest(unsigned char pbMsg[],DWORD ulMsgLen,
-								unsigned char pMsgSHA1[],DWORD ulMaxMsgSHA1Len,DWORD &ulMsgSHA1Len,
-								CString &Info);
+	BOOL RSA_Digest(CK_BYTE_PTR msg, CK_ULONG msg_len,
+		CK_BYTE_PTR msg_sha1, CK_ULONG msg_sha1_len,
+		CString &info);
 	////////////////////////////////////////////////////
 	//功能：RSA签名验证(使用公钥PublicKey)
-	//输入：BOOL bRometPublickey,     (TRUE:获取subjec="Romete RSA Public Key"的公钥；
+	//输入：BOOL bRemotePublicKey,     (TRUE:获取subjec="Romete RSA Public Key"的公钥；
 	//                                  FALSE：第一个公钥)
 	//      unsigned char pbMsg[]       欲签名信息
 	//      DWORD ulMsgLen              长度
@@ -73,14 +74,15 @@ public:
 	//      DWORD &ulSignatureLen       长度
 	//      CString &info               辅助信息
 	//返回：BOOL                        状态
-	BOOL RSA_Verify_PublicKey(BOOL bRometPublicKey,	unsigned char pbMsg[],DWORD ulMsgLen,
-								unsigned char pSignature[],DWORD ulSignatureLen,
-								CString &Info);
+	BOOL RSA_Verify(BOOL bRemotePublicKey, 
+		CK_BYTE_PTR pbMsg, CK_ULONG ulMsgLen,
+		CK_BYTE_PTR pSignature, CK_ULONG ulSignatureLen,
+		CString &info);
 
 	////////////////////////////////////////////////////
 	////////////////////////////////////////////////////
 	//功能：RSA加密(使用公钥PublicKey)
-	//输入：BOOL bRometPublickey,     (TRUE:获取subjec="Romote RSA Public Key"的公钥；
+	//输入：BOOL bRemotePublicKey,     (TRUE:获取subjec="Romote RSA Public Key"的公钥；
 	//                                  FALSE：第一个公钥)
 	//      unsigned char pbMsg[]       欲签名信息
 	//      DWORD ulMsgLen              长度
@@ -88,9 +90,10 @@ public:
 	//      DWORD &ulCipherLen          长度
 	//      CString &info               辅助信息
 	//返回：BOOL              
-	BOOL RSA_Encrypt(BOOL bRometePublicKey,unsigned char pbMsg[],DWORD ulMsgLen,
-								unsigned char pCipherBuffer[],DWORD &ulCipherLen,
-								CString &Info);
+	BOOL RSA_Encrypt(BOOL bRemotePublicKey,
+		CK_BYTE_PTR pbMsg, CK_ULONG ulMsgLen,
+		CK_BYTE_PTR pCipherBuffer, CK_ULONG_PTR ulCipherLen,
+		CString &info);
 
 	//功能：RSA解密(使用私钥)
 	//输入：pCipherBuffer[]              密文信息
@@ -99,8 +102,8 @@ public:
 	//      DWORD &ulMsgLen              长度
 	//      CString &info                辅助信息
 	//返回：BOOL              
-	BOOL CUK_Et199Class::RSA_Decrypt(unsigned char pCipherBuffer[],DWORD ulCipherLen,
-								 unsigned char pbMsg[],DWORD &ulMsgLen,								
+	BOOL RSA_Decrypt(CK_BYTE_PTR pCipherBuffer, CK_ULONG ulCipherLen,
+								 CK_BYTE_PTR pbMsg, CK_ULONG_PTR ulMsgLen,								
 								 CString &Info);
 
 	////////////////////////////////////////////////////
@@ -124,7 +127,7 @@ public:
 	//返回：BOOL                        状态
 	BOOL SaveUSBData(CString label,BOOL bPrivate,unsigned char databuffer[],DWORD len,CString &Info);
 	
-	BOOL SaveRometePublicKey(unsigned char keybuffer[],DWORD keylen,CString &info);
+	BOOL SaveRemotePublicKey(unsigned char keybuffer[],DWORD keylen,CString &info);
 	//BOOL SavePublicKey(CString label,unsigned char databuffer[],DWORD len,CString &Info);
 
 	////////////////////////////////////////////////////
@@ -139,13 +142,13 @@ public:
 	
 	////////////////////////////////////////////////////
 	//功能：查询公钥USBKey的数据
-	//输入：BOOL bRometPublickey,     (TRUE:获取subjec="Romete RSA Public Key"的公钥；
+	//输入：BOOL bRemotePublicKey,     (TRUE:获取subjec="Romete RSA Public Key"的公钥；
 	//                                  FALSE：第一个公钥)
 	//      DWORD MaxBufferlen          信息最大长度	
 	//输出：unsigned char databuffer[]  查询到的信息
 	//      CString &info               辅助信息
 	//返回：DWORD                       查询到的公钥数据长度
-	DWORD GetPublicKey(BOOL bRometPublickey,unsigned char databuffer[],DWORD MaxBufferlen,CString &Info);
+	DWORD GetPublicKey(BOOL bRemotePublicKey,unsigned char databuffer[],DWORD MaxBufferlen,CString &Info);
 	
 	////////////////////////////////////////////////////
 	//功能：制作RSA标准的非对称密钥对，存于设备
@@ -167,13 +170,13 @@ protected:
 
 	////////////////////////////////////////////////////
 	//功能：在USBKey区查询指定密钥的句柄（USBKey）
-	//输入：BOOL bRometPublickey,     (TRUE:获取subjec="Romete RSA Public Key"的公钥；
+	//输入：BOOL bRemotePublicKey,     (TRUE:获取subjec="Romete RSA Public Key"的公钥；
 	//                                  FALSE：第一个公钥)
 	//      BOOL bPrivate               是否存放在保密区（私钥）
 	//输出：CK_OBJECT_HANDLE &hObject   密钥句柄
 	//      CString &info               辅助信息
 	//返回：BOOL                        状态
-	BOOL GetUsbKeyObject(BOOL bRometPublickey,BOOL bPrivate,CK_OBJECT_HANDLE &hObject,CString &Info);
+	BOOL GetUsbKeyObject(BOOL bRemotePublicKey,BOOL bPrivate,CK_OBJECT_HANDLE &hObject,CString &Info);
 };
 
 

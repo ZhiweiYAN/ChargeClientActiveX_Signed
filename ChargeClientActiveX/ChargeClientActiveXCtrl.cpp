@@ -754,7 +754,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 				//	char* *uncrypted_unsigned_recv_pkt, int* uncrypted_unsigned_recv_pkt_len);
 				m_usbkey.InitInstance();
 				int ret_usb_key = 0;
-				ret_usb_key = m_usbkey.DecryptVerify((unsigned char*)signed_crypted_recv_pkt, signed_crypted_recv_pkt_len,
+				ret_usb_key = m_usbkey.DecryptVerifyPkt((unsigned char*)signed_crypted_recv_pkt, signed_crypted_recv_pkt_len,
 					ret_state,
 					(unsigned char* * )&uncrypted_unsigned_recv_pkt,uncrypted_unsigned_recv_pkt_len,res_str);
 

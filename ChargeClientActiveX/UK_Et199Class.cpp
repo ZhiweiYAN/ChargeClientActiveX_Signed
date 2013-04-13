@@ -14,107 +14,17 @@
 CK_BBOOL bTrue = TRUE;
 CK_BBOOL bFalse = FALSE;
 
+#define BUFFER_SIZE 255
+#define PROGRAM_NAME "PKCS ET199 App"
 
-//////////////////////////////////////////////////////////////////////
-// Construction/Destruction
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
-// byte to string according with special format
-//static CString nByteToStr(DWORD dwSize, void* pData, DWORD dwByte, DWORD dwSplit);
-//
-//CString nByteToStr(DWORD dwSize, void* pData, DWORD dwByte, DWORD dwSplit)
-//{
-//	BYTE* pBuf = (BYTE*)pData; // local pointer to a BYTE in the BYTE array.
-//	
-//	CString strRet("");	
-//	DWORD nLine = 0;	
-//	DWORD dwLines = 0;
-//	DWORD dwRest = 0;
-//	bool bNeedSplit = true;
-//	char szTemp[20] = {0, };
-//	
-//	DWORD dwBlock = 0;	
-//	if(0 == dwSplit)
-//	{
-//		dwSplit = dwSize;
-//		bNeedSplit = false;
-//	}
-//	
-//	dwRest = dwSize % dwSplit;
-//	dwLines = dwSize / dwSplit;
-//	
-//	
-//	DWORD i, j, k, m;
-//	for(i = 0; i < dwLines; i++)
-//	{
-//		DWORD dwRestTemp = dwSplit % dwByte;
-//		DWORD dwByteBlock = dwSplit / dwByte;
-//		
-//		for(j = 0; j < dwByteBlock; j++)
-//		{
-//			for(k = 0; k < dwByte; k++)
-//			{
-//				wsprintf(szTemp, "%02X", pBuf[i * dwSplit + j * dwByte + k]);
-//				strRet += szTemp;
-//			}
-//			strRet += " ";
-//		}
-//		if(dwRestTemp)
-//		{
-//			for(m = 0; m < dwRestTemp; m++)
-//			{
-//				wsprintf(
-//					szTemp, "%02X",
-//					pBuf[i * dwSplit + j * dwByte + k - 3 + dwRestTemp]);
-//				strRet += szTemp;
-//			}
-//		}
-//		if(bNeedSplit)
-//			strRet += NEWLINE;
-//	}
-//	
-//	if(dwRest)
-//	{
-//		DWORD dwRestTemp = dwRest % dwByte;
-//		DWORD dwByteBlock = dwRest / dwByte;
-//		for(j = 0; j < dwByteBlock; j++)
-//		{
-//			for(k = 0; k < dwByte; k++)
-//			{
-//				wsprintf(szTemp, "%02X", pBuf[dwSize - dwRest + k]);
-//				strRet += szTemp;
-//			}
-//			strRet += " ";
-//		}
-//		if(dwRestTemp)
-//		{
-//			for(m = 0; m < dwRestTemp; m++)
-//			{
-//				wsprintf(
-//					szTemp, "%02X",
-//					pBuf[dwSize - dwRest + k - 1 + dwRestTemp]);
-//				strRet += szTemp;
-//			}
-//		}
-//		if(bNeedSplit)
-//			strRet += NEWLINE;
-//	}
-//	
-//	
-//	return strRet;
-//}  // End of ByteToStr
+
 
 CUK_Et199Class::CUK_Et199Class()
 {
 	m_pSlotList = NULL_PTR;
-	m_pApplication = new char[255];
-	ZeroMemory(m_pApplication, 255);
-	//USES_CONVERSION;
-	//char *pStr = T2A("PKCS ET199 App");
-	//memcpy(m_pApplication,pStr,)
-    //m_pApplication="PKCS ET199 App";
-	memcpy(m_pApplication,"PKCS ET199 App",strlen("PKCS ET199 App"));
-	//lstrcpy(m_pApplication, "PKCS ET199 App");
+	m_pApplication = new char[BUFFER_SIZE];
+	ZeroMemory(m_pApplication, BUFFER_SIZE);
+	memcpy(m_pApplication,PROGRAM_NAME, strlen(PROGRAM_NAME));
 	m_hSession = NULL_PTR;
 
 }
@@ -122,13 +32,13 @@ CUK_Et199Class::CUK_Et199Class()
 CUK_Et199Class::~CUK_Et199Class()
 {
 	DisConnectDev();
-	/*if(m_pApplication)
+
+	if(NULL!=m_pApplication)
 	{
 		delete[] m_pApplication;
-		
-	}*/
+		m_pApplication = NULL;
+	}
 	
-	delete[] m_pApplication;
 	if(m_pSlotList)
 	{
 		delete[] m_pSlotList;
@@ -139,28 +49,15 @@ CUK_Et199Class::~CUK_Et199Class()
 }
 void CUK_Et199Class::DisConnectDev(void)
 {
-	if(m_hSession)
+	if(NULL!=m_hSession)
 	{
 		C_Logout(m_hSession);
 		C_CloseSession(m_hSession);
 		m_hSession = NULL_PTR;
 	}
-	/*delete[] m_pApplication;
-	if(m_pSlotList)
-	{
-		delete[] m_pSlotList;
-		m_pSlotList = NULL_PTR;
-	}*/
 	m_strUserPIN="";
 }
 
-BOOL CUK_Et199Class::TestHardDev(CString &Info)
-{
-
- 
-  return 0;
-
-}
 
 BOOL CUK_Et199Class::FormatDev(CString strTokenName,CString strSOPin,CString strUserPin,CString &info)
 {
@@ -391,7 +288,7 @@ BOOL CUK_Et199Class::MakeKeypairgen(CString &info)
 	}
 }
 
-BOOL CUK_Et199Class::SaveRometePublicKey(unsigned char keybuffer[],DWORD keylen,CString &info) 
+BOOL CUK_Et199Class::SaveRemotePublicKey(unsigned char keybuffer[],DWORD keylen,CString &info) 
 {
 	//1、用户登录
 	if(m_hSession ==NULL_PTR)
@@ -428,13 +325,13 @@ BOOL CUK_Et199Class::SaveRometePublicKey(unsigned char keybuffer[],DWORD keylen,
 
 	if(CKR_OK != rv)
 	{
-		info.Format(_T("Can't Generate Romete RSA Public Key , ErrorCode: 0x%08X."), rv);
+		info.Format(_T("Can't Generate Remote RSA Public Key , ErrorCode: 0x%08X."), rv);
 		return FALSE;
 	}
 	else
 	{
 		
-		info.Format(_T("Generate Romete RSA Public Key Successfully!"));
+		info.Format(_T("Generate Remote RSA Public Key Successfully!"));
 		//ShowMsg(NEWLINE"Now,You can Sign,Verify,Encryp and Decrypt use the Key Pair!"NEWLINE);
 		return TRUE;
 	}
@@ -626,11 +523,11 @@ DWORD CUK_Et199Class::GetData(CString label,BOOL bPrivate,unsigned char databuff
 	return dwReadDataLen;
 	
 }
-DWORD CUK_Et199Class::GetPublicKey(BOOL bRometPublickey,unsigned char databuffer[],DWORD MaxBufferlen,CString &Info)
+DWORD CUK_Et199Class::GetPublicKey(BOOL bRemotePublicKey,unsigned char databuffer[],DWORD MaxBufferlen,CString &Info)
 {
 	//数据对象句柄 
 	CK_OBJECT_HANDLE hObject = NULL; 
-	if(GetUsbKeyObject(bRometPublickey,FALSE,hObject,Info)==FALSE)
+	if(GetUsbKeyObject(bRemotePublicKey,FALSE,hObject,Info)==FALSE)
 	{
 		return 0;
 	}
@@ -793,7 +690,7 @@ BOOL CUK_Et199Class::GetDataObject(CString label,BOOL bPrivate,CK_OBJECT_HANDLE 
 	return TRUE;
 	
 }
-BOOL CUK_Et199Class::GetUsbKeyObject(BOOL bRometPublickey,BOOL bPrivate,CK_OBJECT_HANDLE &hObject,CString &Info)
+BOOL CUK_Et199Class::GetUsbKeyObject(BOOL bRemotePublicKey,BOOL bPrivate,CK_OBJECT_HANDLE &hObject,CString &Info)
 {
 	//数据对象句柄 
 	hObject = NULL; 
@@ -802,6 +699,7 @@ BOOL CUK_Et199Class::GetUsbKeyObject(BOOL bRometPublickey,BOOL bPrivate,CK_OBJEC
 		Info.Format(_T("have not connect dev"));
 		return FALSE;
 	}
+
 	//1、建立数据对象
 	CK_RV ck_rv; 
 	//数据类型：普通数据 
@@ -839,7 +737,7 @@ BOOL CUK_Et199Class::GetUsbKeyObject(BOOL bRometPublickey,BOOL bPrivate,CK_OBJEC
 	CK_ULONG ulFindObjectCount = 0; 	
 	//2、查找数据对象 
 	//按照模板的前四项查找，即数据对象，硬件里面，私有区和标签符合的 
-	if (bRometPublickey==TRUE)
+	if (bRemotePublicKey==TRUE)
 	{
 		ck_rv = C_FindObjectsInit(m_hSession, pubTemplate, 3); 
 	}
@@ -883,100 +781,76 @@ BOOL CUK_Et199Class::GetUsbKeyObject(BOOL bRometPublickey,BOOL bPrivate,CK_OBJEC
 }
 
 //摘要
-BOOL CUK_Et199Class::RSA_Digest(unsigned char pbMsg[],DWORD ulMsgLen,
-								unsigned char pMsgSHA1[],DWORD ulMaxMsgSHA1Len,DWORD &ulMsgSHA1Len,
-								CString &Info)
+BOOL CUK_Et199Class::RSA_Digest(CK_BYTE_PTR msg, CK_ULONG msg_len,
+								CK_BYTE_PTR msg_sha1, CK_ULONG msg_sha1_len,
+								CString &info)
 {
-
-	////////////////////////////////////////
-	//散列结果
-//	CK_BYTE_PTR pbMsgSHA1 = NULL;
-//	//散列结果长度
-//	CK_ULONG cbMsgSHA1 = 0;
 	CK_RV rv;	
+
 	//散列算法机制，这里使用SHA1散列算法
 	CK_MECHANISM digestMechan[] = {CKM_SHA_1, NULL_PTR, 0};
+
 	//散列初始化
 	rv = C_DigestInit(m_hSession, digestMechan);
 	if(CKR_OK != rv)
 	{
-		Info.Format(_T("Fail to call C_DigestInit!Error code 0x%08X."), rv);
+		info.Format(_T("Fail to call C_DigestInit!Error code 0x%08X."), rv);
 		return FALSE;
 	}
 	
     //将原文数据进行SHA1散列，第一次先得到散列后的数据长度
-	rv = C_Digest(m_hSession, pbMsg, ulMsgLen, NULL, &ulMsgSHA1Len);
+	rv = C_Digest(m_hSession, msg, msg_len, NULL, &msg_sha1_len);
 	if(CKR_OK != rv)
 	{
-		Info.Format(_T("C_Digest 1 Error: %08x\n"), rv);
+		info.Format(_T("C_Digest 1 Error: %08x\n"), rv);
 		return FALSE;
 		
 	}
-	if (ulMsgSHA1Len>ulMaxMsgSHA1Len)
-	{
-		Info.Format(_T("SHA1 buffer size too short， ulMsgSHA1Len: %d\n"), ulMsgSHA1Len);
+
+	//SHA1_LEN = 20 according to the protocols
+	if(20!=msg_sha1_len){
+		info.Format(_T("SHA1_LEN equals 20, but it equals to %d.\n"), msg_sha1_len);
 		return FALSE;
 	}
-	//分配空间
-	memset(pMsgSHA1, 0, ulMsgSHA1Len);
+
+	memset(msg_sha1, 0, msg_sha1_len);
 	//将原文数据进行SHA1散列，第二次得到散列后的数据结果
-	rv = C_Digest(m_hSession, pbMsg, ulMsgLen, pMsgSHA1, &ulMsgSHA1Len);	
+	rv = C_Digest(m_hSession, msg, msg_len, msg_sha1, &msg_sha1_len);	
 	if(CKR_OK != rv)
 	{
-		Info.Format(_T("Fail to C_Digest2!Error code 0x%08X."), rv);
+		info.Format(_T("Fail to C_Digest2!Error code 0x%08X."), rv);
 		return FALSE;
 	}
 	else
 	{
-		/*Info.Format(NEWLINE"Data:"NEWLINE);
-		Info=Info+((char*)pbMsg);*/
-		CString temps;
-		temps.Format(_T(" SHA1 successfully!"));
-		/*Info+=temps;
-		temps.Format(nByteToStr(ulMsgSHA1Len, pMsgSHA1, 1, 16));
-		Info+=temps;
-		temps.Format(NEWLINE"Now you can 对散列结果进行签名，或校验!\n");*/
-		Info+=temps;
-		//////////////////////
-//		CString show;
-//		show=nByteToStr(ulSignatureLen, pSignature,1,16);
-//		temps.Format("Signed Data OK! Len: %d Signed Data is: \r\n%s\n", ulSignatureLen,show);
-//		Info+=temps;
+		info.Format(_T(" SHA1 successfully!"));
 	}
 	return TRUE;
 	
 }
 
 //签名
-BOOL CUK_Et199Class::RSA_Signed(unsigned char pbMsg[],DWORD ulMsgLen,
-								unsigned char pSignature[],DWORD &ulSignatureLen,
+BOOL CUK_Et199Class::RSA_Signed(CK_BYTE_PTR pbMsg, CK_ULONG ulMsgLen,
+								CK_BYTE_PTR pSignature, CK_ULONG_PTR ulSignatureLen,
 								CString &Info)
 {
-	//数据对象句柄 
-	CK_OBJECT_HANDLE m_hPriKey = NULL; 
-	if(GetUsbKeyObject(FALSE,TRUE,m_hPriKey,Info)==FALSE)
+	//get the private key
+	CK_OBJECT_HANDLE hPriKey = NULL; 
+	if(GetUsbKeyObject(FALSE,TRUE,hPriKey,Info)==FALSE)
 	{
 		return FALSE;
 	}
-	/////////////////////////////////////////
+
 	CK_RV rv;
 	CK_MECHANISM ckMechanism = {CKM_RSA_PKCS, NULL_PTR, 0};
-	rv = C_SignInit(m_hSession, &ckMechanism, m_hPriKey);
+	rv = C_SignInit(m_hSession, &ckMechanism, hPriKey);
 	if(CKR_OK != rv)
 	{
 		Info.Format(_T("Fail to call SignInit!Error code 0x%08X."), rv);
 		return FALSE;
 	}
-	
-	/*Info.Format(_T("Signed Data is:"NEWLINE);
-	Info=Info+nByteToStr(ulMsgLen, pbMsg, 1, 16);*/
-	//unsigned char pchar[1024];
-	//memset(pchar,0,1024);
-	//ulSignatureLen=SignedData_LEN;//不可删除
-	rv = C_Sign(m_hSession, 
-		pbMsg,
-		ulMsgLen, 
-		pSignature, &ulSignatureLen);
+
+	rv = C_Sign(m_hSession, pbMsg, ulMsgLen, pSignature, ulSignatureLen);
 	if(CKR_OK != rv)
 	{
 		Info.Format(_T("Fail to Sign!Error code 0x%08X."), rv);
@@ -984,157 +858,124 @@ BOOL CUK_Et199Class::RSA_Signed(unsigned char pbMsg[],DWORD ulMsgLen,
 	}
 	else
 	{
-		/*Info.Format(NEWLINE"Data:"NEWLINE);
-		Info=Info+((char*)pbMsg);*/
-		Info.Format(_T(" was Signed successfully!"));		
+		Info.Format(_T(" Adding the signature successfully!"));		
 	}
 	return TRUE;
 	
 }
 //签名验证
-BOOL CUK_Et199Class::RSA_Verify_PublicKey(BOOL bRemotePublicKey,unsigned char pbMsg[],DWORD ulMsgLen,
-								unsigned char pSignature[],DWORD ulSignatureLen,
-								CString &Info)
+BOOL CUK_Et199Class::RSA_Verify(BOOL bRemotePublicKey, 
+								CK_BYTE_PTR pbMsg, CK_ULONG ulMsgLen,
+								CK_BYTE_PTR pSignature, CK_ULONG ulSignatureLen,
+								CString &info)
 {
-	//数据对象句柄 
-	CK_OBJECT_HANDLE m_hPubKey = NULL; 
-	if(GetUsbKeyObject(bRemotePublicKey,FALSE,m_hPubKey,Info)==FALSE)
+	//read the RSA public key of UKEY or verify server according to the value of bRmotePublicKey
+	CK_OBJECT_HANDLE hPubKey = NULL; 
+	if(GetUsbKeyObject(TRUE,FALSE,hPubKey,info)==FALSE)
 	{
 		return FALSE;
 	}
-	/////////////////////////////////////////
+
 	CK_RV rv;
 	CK_MECHANISM ckMechanism = {CKM_RSA_PKCS, NULL_PTR, 0};
-	rv = C_VerifyInit(m_hSession, &ckMechanism, m_hPubKey);
+	rv = C_VerifyInit(m_hSession, &ckMechanism, hPubKey);
 	if(CKR_OK != rv)
 	{
-		Info.Format(_T("Failed to call VerifyInit!Error code 0x%08X."), rv);
+		info.Format(_T("Failed to call VerifyInit!Error code 0x%08X."), rv);
 		return FALSE;
 	}
-	//rv = C_Verify(m_hSession,
-	//	pbMsg, (unsigned long int)ulMsgLen, 
-	//	pSignature, (unsigned long int)ulSignatureLen);
-	//if(CKR_OK != rv)
-	//{
-	//	Info.Format(_T("Fail to call verify!Error code 0x%08X."), rv);
-	//	return FALSE;
-	//}
-	//else
-	//{	/*Info.Format(NEWLINE"Signed Data is:"NEWLINE);
-	//    Info=Info+nByteToStr(ulMsgLen, pbMsg, 1, 16);*/
-	//	Info.Format(_T("Verify Successfully!"));
-	//}
-	return TRUE;
+	//rv = C_Verify(m_hSession, pbMsg, ulMsgLen, pSignature, ulSignatureLen);
+	if(CKR_OK != rv)
+	{
+		info.Format(_T("Fail to call verify!Error code 0x%08X."), rv);
+		return FALSE;
+	}
+	else{
+		info.Format(_T("Verify Successfully!"));
+		return TRUE;
+	}
 	
 }
 
 //
 //加密
-BOOL CUK_Et199Class::RSA_Encrypt(BOOL bRometePublicKey,unsigned char pbMsg[],DWORD ulMsgLen,
-								unsigned char pCipherBuffer[],DWORD &ulCipherLen,
-								CString &Info)
+BOOL CUK_Et199Class::RSA_Encrypt(BOOL bRemotePublicKey,
+								 CK_BYTE_PTR pbMsg, CK_ULONG ulMsgLen,
+								CK_BYTE_PTR pCipherBuffer, CK_ULONG_PTR ulCipherLen,
+								CString &info)
 {
-	//数据对象句柄 
-	CK_OBJECT_HANDLE m_hPubKey = NULL; 
-	if(GetUsbKeyObject(bRometePublicKey,FALSE,m_hPubKey,Info)==FALSE)
+	//read the RSA public key of UKEY or verify server according to the value of bRmotePublicKey
+	CK_OBJECT_HANDLE hPubKey = NULL; 
+	if(GetUsbKeyObject(bRemotePublicKey,FALSE, hPubKey,info)==FALSE)
 	{
-		return FALSE;
-	}
-	/////////////////////////////////////////
-	CK_RV rv;
-	CK_MECHANISM ckMechanism = {CKM_RSA_PKCS, NULL_PTR, 0};
-	rv = C_EncryptInit(m_hSession, &ckMechanism, m_hPubKey);
-	if(CKR_OK != rv)
-	{
-		Info.Format(_T("Fail to call C_EncryptInit!Error code 0x%08X."), rv);
-		return FALSE;
-	}
-	rv = C_Encrypt(m_hSession, pbMsg, ulMsgLen, NULL_PTR, &ulCipherLen);
-	if(CKR_OK != rv)
-	{
-		Info.Format(_T("Can't acquire the size of Data After encrypt,Error code 0x%08X."), rv);
 		return FALSE;
 	}
 
-	rv = C_Encrypt(m_hSession, pbMsg, ulMsgLen, pCipherBuffer, &ulCipherLen);
+	CK_RV rv;
+	CK_MECHANISM ckMechanism = {CKM_RSA_PKCS, NULL_PTR, 0};
+	rv = C_EncryptInit(m_hSession, &ckMechanism, hPubKey);
+	if(CKR_OK != rv)
+	{
+		info.Format(_T("Fail to call C_EncryptInit!Error code 0x%08X."), rv);
+		return FALSE;
+	}
+	rv = C_Encrypt(m_hSession, pbMsg, ulMsgLen, NULL_PTR, ulCipherLen);
+	if(CKR_OK != rv)
+	{
+		info.Format(_T("Can't acquire the size of Data After encrypt,Error code 0x%08X."), rv);
+		return FALSE;
+	}
+
+	rv = C_Encrypt(m_hSession, pbMsg, ulMsgLen, pCipherBuffer, ulCipherLen);
 	if (CKR_OK != rv)
 	{
-		Info.Format(_T("Fail to encrypt!Error code 0x%08X."), rv);
+		info.Format(_T("Fail to encrypt!Error code 0x%08X."), rv);
 		return FALSE;
 	}
 	else
 	{
-		/*Info.Format(NEWLINE"Data:"NEWLINE);
-		Info=Info+((char*)pbMsg);*/
-		CString temps;
-		temps.Format(_T(" was Encrypt successfully!"));
-		/*Info+=temps;
-		temps.Format(nByteToStr(ulCipherLen, pCipherBuffer, 1, 16));
-		Info+=temps;
-		temps.Format(NEWLINE"Now you can do RSA 解密!\n");*/
-		Info+=temps;
-		//////////////////////
+		info.Format(_T(" was Encrypt successfully!"));
 	}
+
 	return TRUE;
 	
 }
 
 //解密
-BOOL CUK_Et199Class::RSA_Decrypt(unsigned char pCipherBuffer[],DWORD ulCipherLen,
-								 unsigned char pbMsg[],DWORD &ulMsgLen,								
-								 CString &Info)
+BOOL CUK_Et199Class::RSA_Decrypt(CK_BYTE_PTR pCipherBuffer, CK_ULONG ulCipherLen,
+								 CK_BYTE_PTR pbMsg, CK_ULONG_PTR ulMsgLen,								
+								 CString &info)
 {
-	//数据对象句柄 
-	CK_OBJECT_HANDLE m_hPriKey = NULL; 
-	if(GetUsbKeyObject(FALSE,TRUE,m_hPriKey,Info)==FALSE)
+	//read the RSA private key of UKEY 
+	CK_OBJECT_HANDLE hPriKey = NULL; 
+	if(GetUsbKeyObject(FALSE,TRUE,hPriKey,info)==FALSE)
 	{
 		return FALSE;
 	}
-	/////////////////////////////////////////
+
 	CK_RV rv;
 	CK_MECHANISM ckMechanism = {CKM_RSA_PKCS, NULL_PTR, 0};
-	rv = C_DecryptInit(m_hSession, &ckMechanism, m_hPriKey);
+	rv = C_DecryptInit(m_hSession, &ckMechanism, hPriKey);
 	if(CKR_OK != rv)
 	{
-		Info.Format(_T("Fail to call C_DecryptInit!Error code 0x%08X."), rv);
+		info.Format(_T("Fail to call C_DecryptInit!Error code 0x%08X."), rv);
 		return FALSE;
 	}
-	rv = C_Decrypt(m_hSession, pCipherBuffer, ulCipherLen, NULL_PTR, &ulMsgLen);
+	rv = C_Decrypt(m_hSession, pCipherBuffer, ulCipherLen, NULL_PTR, ulMsgLen);
 	if(CKR_OK != rv)
 	{
-		Info.Format(_T("Can't acuire size of Data after Decrypt,Error code 0x%08X."), rv);
+		info.Format(_T("Can't acuire size of Data after Decrypt,Error code 0x%08X."), rv);
 		return FALSE;
 	}
-	memset(pbMsg,0,ulMsgLen+1);	
-	rv = C_Decrypt(m_hSession, pCipherBuffer, ulCipherLen, pbMsg, &ulMsgLen);
+	rv = C_Decrypt(m_hSession, pCipherBuffer, ulCipherLen, pbMsg, ulMsgLen);
 	if (CKR_OK != rv)
 	{
-		Info.Format(_T("Fail to Decrypt!Error code 0x%08X."), rv);
-		//////////////////////////
-		//?????????????
-		DisConnectDev();
-		/*if(m_hSession)
-		{
-			C_CloseSession(m_hSession);
-			m_hSession = NULL_PTR;
-		}		
-		if(m_pSlotList)
-		{
-			delete[] m_pSlotList;
-			m_pSlotList = NULL_PTR;
-		}*/
-		
-		ConnectDev(m_strUserPIN,Info);	
+		info.Format(_T("Fail to Decrypt!Error code 0x%08X."), rv);
 		return FALSE;
 	}
 	else
 	{
-		
-		//CString temps;
-		Info.Format(_T("Decrypt Successfulluy"));
-		//temps.Format(nByteToStr(ulMsgLen, pbMsg, 1, 16));
-		//Info+=temps;
-		
+		info.Format(_T("Decrypt Successfully."));
 	}
 	return TRUE;
 	
