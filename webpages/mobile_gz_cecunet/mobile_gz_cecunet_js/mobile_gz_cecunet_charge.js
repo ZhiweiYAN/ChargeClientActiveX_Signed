@@ -153,6 +153,6 @@ function Clear_ChargeResults() {
     $('#print_charge_result').empty(); 
     $('#print_charge_phone_number').empty(); 
     $('#print_charge_money').empty(); 
-    //$('#print_charge_la_sn').empty(); 
+    $('#print_charge_la_sn').empty(); 
     $('#print_charge_cecunet_sn').empty(); 
 }

@@ -6,7 +6,11 @@
 
 
 #include "UK_Et199Class.h"
-
+#undef ERROR
+#include <glog/logging.h>
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
 
 
 #define	countof(a)			(sizeof(a)/ sizeof(CK_ATTRIBUTE))
@@ -707,10 +711,12 @@ BOOL CUK_Et199Class::GetUsbKeyObject(BOOL bRemotePublicKey,BOOL bPrivate,CK_OBJE
 	if (bPrivate==TRUE)
 	{
 		objClass=CKO_PRIVATE_KEY;
+		LOG(INFO)<<"Find Private Key of UKEY.";
 	}
 	else
 	{
 		objClass=CKO_PUBLIC_KEY;
+		LOG(INFO)<<"Find Public Key of UKEY.";
 	}
 	CK_BBOOL bTrue = TRUE; 
 	CK_BBOOL bFalse = FALSE; 
@@ -740,10 +746,12 @@ BOOL CUK_Et199Class::GetUsbKeyObject(BOOL bRemotePublicKey,BOOL bPrivate,CK_OBJE
 	if (bRemotePublicKey==TRUE)
 	{
 		ck_rv = C_FindObjectsInit(m_hSession, pubTemplate, 3); 
+		LOG(INFO)<<"Find the public key of Server.";
 	}
 	else
 	{
-		ck_rv = C_FindObjectsInit(m_hSession, pubTemplate, 2);  
+		ck_rv = C_FindObjectsInit(m_hSession, pubTemplate, 2); 
+		LOG(INFO)<<"Find the public key of UKEY.";
 	}
 	
 	if(ck_rv != CKR_OK) 
@@ -760,6 +768,7 @@ BOOL CUK_Et199Class::GetUsbKeyObject(BOOL bRemotePublicKey,BOOL bPrivate,CK_OBJE
 	if(ck_rv != CKR_OK) 
 	{ 
 		Info.Format(_T("C_FindObjects Error! 0x%08x\n"),ck_rv); 
+		LOG(ERROR)<<"C_FindObjects Error code: "<<ck_rv;
 		return FALSE; 
 	} 
 	
@@ -767,12 +776,14 @@ BOOL CUK_Et199Class::GetUsbKeyObject(BOOL bRemotePublicKey,BOOL bPrivate,CK_OBJE
 	if(ck_rv != CKR_OK) 
 	{ 
 		Info.Format(_T("C_FindObjectsFinal Error! 0x%08x\n"),ck_rv); 
+		LOG(ERROR)<<"C_FindObjectsFinal Error code:"<<ck_rv;
 		return FALSE; 
 	} 
 	
 	if(ulFindObjectCount == 0) 
 	{ 
 		Info.Format(_T("Not Find key To Read!\n")); 
+		LOG(ERROR)<<"Find nothing about key.";
 		return FALSE; 
 	}
 	/////////////////////////////////////////
@@ -795,35 +806,43 @@ BOOL CUK_Et199Class::RSA_Digest(CK_BYTE_PTR msg, CK_ULONG msg_len,
 	if(CKR_OK != rv)
 	{
 		info.Format(_T("Fail to call C_DigestInit!Error code 0x%08X."), rv);
+		LOG(ERROR)<<"Fail to call C_DigestInit!Error code: "<<rv;
 		return FALSE;
 	}
-	
+	LOG(INFO)<<"C_DigestInit, Success";
+
     //将原文数据进行SHA1散列，第一次先得到散列后的数据长度
 	rv = C_Digest(m_hSession, msg, msg_len, NULL, &msg_sha1_len);
 	if(CKR_OK != rv)
 	{
-		info.Format(_T("C_Digest 1 Error: %08x\n"), rv);
+		info.Format(_T("C_Digest 1st Error: %08x\n"), rv);
+		LOG(ERROR)<<"C_Digest 1st, Know the length, failed. Err code:"<<rv;
 		return FALSE;
 		
 	}
+	LOG(INFO)<<"C_Digest, Know the length, Success"; 
 
 	//SHA1_LEN = 20 according to the protocols
 	if(20!=msg_sha1_len){
 		info.Format(_T("SHA1_LEN equals 20, but it equals to %d.\n"), msg_sha1_len);
+		LOG(ERROR)<< "SHA1_LEN equals 20, but it equals to "<< msg_sha1_len;
 		return FALSE;
 	}
+	LOG(INFO)<<"SHA1_LEN equals 20, but it equals to " <<msg_sha1_len;
 
 	memset(msg_sha1, 0, msg_sha1_len);
 	//将原文数据进行SHA1散列，第二次得到散列后的数据结果
 	rv = C_Digest(m_hSession, msg, msg_len, msg_sha1, &msg_sha1_len);	
 	if(CKR_OK != rv)
 	{
-		info.Format(_T("Fail to C_Digest2!Error code 0x%08X."), rv);
+		info.Format(_T("Fail to C_Digest 2nd !Error code 0x%08X."), rv);
+		LOG(ERROR)<<"Fail to C_Digest 2nd !Error code:"<<rv; 
 		return FALSE;
 	}
 	else
 	{
 		info.Format(_T(" SHA1 successfully!"));
+		LOG(INFO)<<" C_Digest 2nd, SHA1 successfully!";
 	}
 	return TRUE;
 	
@@ -838,8 +857,10 @@ BOOL CUK_Et199Class::RSA_Signed(CK_BYTE_PTR pbMsg, CK_ULONG ulMsgLen,
 	CK_OBJECT_HANDLE hPriKey = NULL; 
 	if(GetUsbKeyObject(FALSE,TRUE,hPriKey,Info)==FALSE)
 	{
+		LOG(ERROR)<<"Get private key for signed, failed.";
 		return FALSE;
 	}
+	LOG(INFO)<<"Get private key for signed, success.";
 
 	CK_RV rv;
 	CK_MECHANISM ckMechanism = {CKM_RSA_PKCS, NULL_PTR, 0};
@@ -847,18 +868,22 @@ BOOL CUK_Et199Class::RSA_Signed(CK_BYTE_PTR pbMsg, CK_ULONG ulMsgLen,
 	if(CKR_OK != rv)
 	{
 		Info.Format(_T("Fail to call SignInit!Error code 0x%08X."), rv);
+		LOG(ERROR)<<"C_SignInit, failed. err code: "<<rv;
 		return FALSE;
 	}
+	LOG(INFO)<<"C_signInit, success.";
 
 	rv = C_Sign(m_hSession, pbMsg, ulMsgLen, pSignature, ulSignatureLen);
 	if(CKR_OK != rv)
 	{
 		Info.Format(_T("Fail to Sign!Error code 0x%08X."), rv);
+		LOG(ERROR)<<"C_Sign, failed. err code:"<<rv;
 		return FALSE;
 	}
 	else
 	{
-		Info.Format(_T(" Adding the signature successfully!"));		
+		Info.Format(_T(" Adding the signature successfully!"));	
+		LOG(INFO)<<"C_Sign, success.";
 	}
 	return TRUE;
 	
@@ -873,8 +898,10 @@ BOOL CUK_Et199Class::RSA_Verify(BOOL bRemotePublicKey,
 	CK_OBJECT_HANDLE hPubKey = NULL; 
 	if(GetUsbKeyObject(TRUE,FALSE,hPubKey,info)==FALSE)
 	{
+		LOG(ERROR)<<"Get Public key for verify, failed.";
 		return FALSE;
 	}
+	LOG(INFO)<<"Get public key for verify, success";
 
 	CK_RV rv;
 	CK_MECHANISM ckMechanism = {CKM_RSA_PKCS, NULL_PTR, 0};
@@ -882,16 +909,19 @@ BOOL CUK_Et199Class::RSA_Verify(BOOL bRemotePublicKey,
 	if(CKR_OK != rv)
 	{
 		info.Format(_T("Failed to call VerifyInit!Error code 0x%08X."), rv);
+		LOG(ERROR)<<"C_VerifyInit, failed, erro code:"<<rv;
 		return FALSE;
 	}
 	//rv = C_Verify(m_hSession, pbMsg, ulMsgLen, pSignature, ulSignatureLen);
 	if(CKR_OK != rv)
 	{
 		info.Format(_T("Fail to call verify!Error code 0x%08X."), rv);
+		LOG(ERROR)<<"C_Verify, failed. err code:" << rv;
 		return FALSE;
 	}
 	else{
 		info.Format(_T("Verify Successfully!"));
+		LOG(INFO)<<"C_Verify, success.";
 		return TRUE;
 	}
 	
@@ -908,33 +938,43 @@ BOOL CUK_Et199Class::RSA_Encrypt(BOOL bRemotePublicKey,
 	CK_OBJECT_HANDLE hPubKey = NULL; 
 	if(GetUsbKeyObject(bRemotePublicKey,FALSE, hPubKey,info)==FALSE)
 	{
+		LOG(ERROR)<<"Get Public key for Encrypt, failed.";
 		return FALSE;
 	}
 
+	LOG(INFO)<<"Get public key for encrypt, success.";
 	CK_RV rv;
 	CK_MECHANISM ckMechanism = {CKM_RSA_PKCS, NULL_PTR, 0};
 	rv = C_EncryptInit(m_hSession, &ckMechanism, hPubKey);
 	if(CKR_OK != rv)
 	{
 		info.Format(_T("Fail to call C_EncryptInit!Error code 0x%08X."), rv);
+		LOG(ERROR)<<"C_EncryptInit, failed. err code:"<<rv;
 		return FALSE;
 	}
+	LOG(INFO)<<"C_EncryptInit, success.";
+
 	rv = C_Encrypt(m_hSession, pbMsg, ulMsgLen, NULL_PTR, ulCipherLen);
 	if(CKR_OK != rv)
 	{
 		info.Format(_T("Can't acquire the size of Data After encrypt,Error code 0x%08X."), rv);
+		LOG(ERROR)<<"C_Encrypt 1st, to get length of cipher, failed"<<rv;
 		return FALSE;
 	}
+
+	LOG(INFO)<<"C_Encrypt 1st, to get length of cipher, success." << *ulCipherLen;
 
 	rv = C_Encrypt(m_hSession, pbMsg, ulMsgLen, pCipherBuffer, ulCipherLen);
 	if (CKR_OK != rv)
 	{
 		info.Format(_T("Fail to encrypt!Error code 0x%08X."), rv);
+		LOG(ERROR)<<"C_Encrypt 2nd, do encrypt, failed. err code:"<<rv;
 		return FALSE;
 	}
 	else
 	{
 		info.Format(_T(" was Encrypt successfully!"));
+		LOG(INFO)<<"C_Encrypt 2nd, do encrypt, success.";
 	}
 
 	return TRUE;
@@ -950,8 +990,10 @@ BOOL CUK_Et199Class::RSA_Decrypt(CK_BYTE_PTR pCipherBuffer, CK_ULONG ulCipherLen
 	CK_OBJECT_HANDLE hPriKey = NULL; 
 	if(GetUsbKeyObject(FALSE,TRUE,hPriKey,info)==FALSE)
 	{
+		LOG(ERROR)<<"get private key for decrypt, failed.";
 		return FALSE;
 	}
+	LOG(INFO)<<"get private key for decrypt, success.";
 
 	CK_RV rv;
 	CK_MECHANISM ckMechanism = {CKM_RSA_PKCS, NULL_PTR, 0};
@@ -959,23 +1001,29 @@ BOOL CUK_Et199Class::RSA_Decrypt(CK_BYTE_PTR pCipherBuffer, CK_ULONG ulCipherLen
 	if(CKR_OK != rv)
 	{
 		info.Format(_T("Fail to call C_DecryptInit!Error code 0x%08X."), rv);
+		LOG(ERROR)<<"C_DecryptInit failed, error code:"<<rv;
 		return FALSE;
 	}
+	LOG(INFO)<<"C_DecryptInit, success.";
 	rv = C_Decrypt(m_hSession, pCipherBuffer, ulCipherLen, NULL_PTR, ulMsgLen);
 	if(CKR_OK != rv)
 	{
-		info.Format(_T("Can't acuire size of Data after Decrypt,Error code 0x%08X."), rv);
+		info.Format(_T("Can't acquire size of Data after Decrypt,Error code 0x%08X."), rv);
+		LOG(ERROR)<<" C_Decrypte 1st. Can't acquire size of Data after Decrypt,Error code:"<<rv;
 		return FALSE;
 	}
+	LOG(INFO)<<" C_Decrypte 1st. Acquire size of Data after Decrypt, success." << *ulMsgLen;
 	rv = C_Decrypt(m_hSession, pCipherBuffer, ulCipherLen, pbMsg, ulMsgLen);
 	if (CKR_OK != rv)
 	{
 		info.Format(_T("Fail to Decrypt!Error code 0x%08X."), rv);
+		LOG(ERROR)<<"C_Decrypt 2nd, Failed. erro code: "<<rv;
 		return FALSE;
 	}
 	else
 	{
 		info.Format(_T("Decrypt Successfully."));
+		LOG(INFO)<<"C_Decrypt 2nd, success.";
 	}
 	return TRUE;
 	
