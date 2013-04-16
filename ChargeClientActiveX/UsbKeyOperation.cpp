@@ -20,22 +20,29 @@ bool CUsbKeyOperation::InitInstance(void)
 	rv = C_Initialize(NULL);
 	if(CKR_OK != rv)
 	{
-		LOG(ERROR)<<"Can't Load PKCS#11 Library!";
-		//AfxMessageBox(_T("Can't Load PKCS#11 Library!"), MB_OK | MB_ICONERROR);
+		LOG(ERROR)<<"Can't Load PKCS#11 ET199 USBKEY Library!";
 		return false;
 	}
 	else
 	{
-		LOG(INFO)<<"Load PKCS#11 Library ok";
-		//AfxMessageBox(_T("Load PKCS#11 Library ok"));
+		LOG(INFO)<<"Load PKCS#11 ET199 USBKEY Library OK.";
+		return true;
 	}
-	m_bServerPublic=TRUE;
-	return true;
 
 }
 void CUsbKeyOperation::ExitInstance(void)
 {
-	C_Finalize(NULL);
+	CK_RV rv;
+	rv = C_Finalize(NULL);
+	if(CKR_OK != rv)
+	{
+		LOG(ERROR)<<"Can't Unload PKCS#11 ET199 Library!";
+	}
+	else
+	{
+		LOG(INFO)<<"Unload PKCS#11 USBKEY Library OK.";
+	}
+	return;
 }
 bool CUsbKeyOperation::SelfCheck(CString &info)
 {
@@ -47,11 +54,9 @@ bool CUsbKeyOperation::SelfCheck(CString &info)
 	int Signedbuffer_len=0;
 
 	//加密
-	//强制使用本地公钥
-	m_bServerPublic=FALSE;
 	unsigned char* pstr = test_plain_text;
 
-	if(SignedEncryptPkt(pstr,test_plain_txt_len,(unsigned char**)&pSignedBuffer,Signedbuffer_len)==false)
+	if(SignedEncryptPkt(1, pstr,test_plain_txt_len,(unsigned char**)&pSignedBuffer,Signedbuffer_len)==false)
 	{
 		info= info + _T("USB KEY 自检, 签名, 加密 失败.");
 		LOG(ERROR)<<T2A(info);
@@ -60,7 +65,6 @@ bool CUsbKeyOperation::SelfCheck(CString &info)
 			free(pSignedBuffer);
 			pSignedBuffer=NULL;
 		}
-		m_bServerPublic=TRUE;//恢复使用远程服务器公钥
 		return false;
 	}
 	
@@ -70,40 +74,38 @@ bool CUsbKeyOperation::SelfCheck(CString &info)
 	//
 	////对密文解密
 	unsigned char *pBuffer=NULL;//需要清理缓冲区
-	//int buffer_len=0;
-	//char bz;
-	//if(DecryptVerifyPkt(pSignedBuffer,Signedbuffer_len,bz,(unsigned char**)&pBuffer,buffer_len,info)==false)
-	//{		
-	//	info= info + _T("USB KEY 自检, 解密, 验签 失败.");
- //       LOG(ERROR)<<T2A(info);
-	//	if(NULL!=pSignedBuffer)
-	//	{
-	//		free(pSignedBuffer);
-	//		pSignedBuffer=NULL;
-	//	}
-	//	if(NULL!=pBuffer)
-	//	{
-	//		free(pBuffer);
-	//		pBuffer=NULL;
-	//	}
-	//	m_bServerPublic=TRUE;//恢复使用远程服务器公钥
-	//	return false;
-	//}
-	//m_bServerPublic=TRUE;//恢复使用远程服务器公钥
+	int buffer_len=0;
+	char bz;
+	if(DecryptVerifyPkt(1, pSignedBuffer,Signedbuffer_len,bz,(unsigned char**)&pBuffer,buffer_len,info)==false)
+	{		
+		info= info + _T("USB KEY 自检, 解密, 验签 失败.");
+        LOG(ERROR)<<T2A(info);
+		if(NULL!=pSignedBuffer)
+		{
+			free(pSignedBuffer);
+			pSignedBuffer=NULL;
+		}
+		if(NULL!=pBuffer)
+		{
+			free(pBuffer);
+			pBuffer=NULL;
+		}
+		return false;
+	}
 
-	//
-	////检查一致性
-	//for(int i=0;i<buffer_len;i++)
-	//{
-	//	if(pBuffer[i]!=pstr[i])
-	//	{
-	//		info=info+_T("原始明文与解密后明文两者内容不一致");
- //           LOG(ERROR)<<info;
-	//		LOG(ERROR)<<"Origin Plain Text:"<<(pstr);
-	//		LOG(ERROR)<<"Decrypted Text:"<<(pBuffer);
-	//		return false;
-	//	}
-	//}
+	
+	//检查一致性
+	for(int i=0;i<buffer_len;i++)
+	{
+		if(pBuffer[i]!=pstr[i])
+		{
+			info=info+_T("原始明文与解密后明文两者内容不一致");
+            LOG(ERROR)<<info;
+			LOG(ERROR)<<"Origin Plain Text:"<<(pstr);
+			LOG(ERROR)<<"Decrypted Text:"<<(pBuffer);
+			return false;
+		}
+	}
 
 	if(pSignedBuffer!=NULL)
 	{
@@ -125,8 +127,6 @@ bool CUsbKeyOperation::SelfCheck(CString &info)
 
 	terminal_id = GetTerminalID(err_info);
 	user_id = GetUserID(err_info);
-
-
 
 	info=info + _T("USBKey ID: ")+terminal_id + user_id;
 
@@ -286,7 +286,8 @@ bool CUsbKeyOperation::GetUKID(unsigned char ukid[],DWORD len,CString &info)
 //}
 
 
-bool CUsbKeyOperation::SignedEncryptPkt(unsigned char *in_buffer, 
+bool CUsbKeyOperation::SignedEncryptPkt(int test_flag,
+										unsigned char *in_buffer, 
 										int in_buffer_len, 
 										unsigned char** out_buffer, 
 										int &out_buffer_len)
@@ -370,7 +371,7 @@ bool CUsbKeyOperation::SignedEncryptPkt(unsigned char *in_buffer,
 	memset(cipher_buf, 0, cipher_buf_len);
 	unsigned long int  cipher_data_len = 0;
 
-	ret = m_ET199.RSA_Encrypt(m_bServerPublic, 
+	ret = m_ET199.RSA_Encrypt(test_flag, 
 		uncrypted_data, (unsigned long int )uncrypted_data_len, 
 		cipher_buf, &cipher_data_len, info);
 	if(FALSE==ret){
@@ -444,7 +445,7 @@ void CUsbKeyOperation::GetErroInfo(unsigned char revbuffer[],int reclen,CString 
 	
 }
 
-int CUsbKeyOperation::DecryptVerifyPkt(unsigned char *in_buffer, int in_buffer_Len, 
+int CUsbKeyOperation::DecryptVerifyPkt(int test_flag, unsigned char *in_buffer, int in_buffer_Len, 
 									char &RetState,unsigned char** out_buffer, 
 									int &out_buffer_len,CString &erro)
 {
@@ -528,7 +529,7 @@ int CUsbKeyOperation::DecryptVerifyPkt(unsigned char *in_buffer, int in_buffer_L
 	memset(signature_in_pkt, 0, SIGNATURE_LEN+1);
 	memcpy(signature_in_pkt, plain_data, SIGNATURE_LEN);
 
-	bRet = m_ET199.RSA_Verify(TRUE, msg_sha1, msg_sha1_len, signature_in_pkt, signature_in_pkt_len, info );
+	bRet = m_ET199.RSA_Verify(test_flag, msg_sha1, msg_sha1_len, signature_in_pkt, signature_in_pkt_len, info );
 	if(FALSE==bRet){
 		info.Format(_T("签名校验时失败."));
 		LOG(ERROR)<<"Verify Failed"<<T2A(info);

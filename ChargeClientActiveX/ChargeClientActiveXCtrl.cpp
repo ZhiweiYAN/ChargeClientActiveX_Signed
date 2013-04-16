@@ -417,7 +417,29 @@ OutputFields[]: ActiveX variables --> web parameters
 */
 void CChargeClientActiveXCtrl::LoadParameter(void)
 {
+	CString terminal_id;
+	CString user_id;
+	CString err_info;
 
+	CString field_id;
+
+	//上行(下行)数据包 = 公共包头 + 企业上行(下行)数据包.
+	//up(down)-link packet = common pkt header + business pkt (forward pkt or backward pkt)
+	CString sending_packet_data; 
+
+	//取得此次操作所用到的数据包的模板(从数据库中)
+	//Get the all templates which are used this time from database.
+	CString common_packet_header_template;
+
+	CString forward_packet_template;
+	CString backward_packet_template;
+
+	CString sending_packet_template;
+	CString recving_packet_template;
+
+	CString key ;
+	char *field_data_pointer = NULL;
+	int field_data_length = 0;
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 	//Enable Glog INFO output from javascript codes on the web pages.
@@ -438,6 +460,8 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 	m_ActivexErrorCode = 0;
 	m_ActivexErrorInfo.Empty();
 
+	m_usbkey.InitInstance();
+
 	//显示一个本地数据库的版本号,用于提示用.
 	//Display the version id of the local db file.
 	if(-1 == GetDbVersionID()){
@@ -445,26 +469,10 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 		DisplayDebugInfoToWebPage(_T("从数据库中,提取本地数据库版本ID,出错.检查是否下载成功."));
 		AfxMessageBox(ERRO_DOWNLOAD_DB);
 		m_sys.ExitProc();
-		return;
+		goto LoadParameter_END;
 	};
 
-	//上行(下行)数据包 = 公共包头 + 企业上行(下行)数据包.
-	//up(down)-link packet = common pkt header + business pkt (forward pkt or backward pkt)
-	CString sending_packet_data; 
 
-	//取得此次操作所用到的数据包的模板(从数据库中)
-	//Get the all templates which are used this time from database.
-	CString common_packet_header_template;
-
-	CString forward_packet_template;
-	CString backward_packet_template;
-
-	CString sending_packet_template;
-	CString recving_packet_template;
-
-	CString key ;
-	char *field_data_pointer = NULL;
-	int field_data_length = 0;
 
 	//取公共包头模板,如果出错会关闭整个IE.
 	//Get Common packet header template, close IE if failed.
@@ -503,7 +511,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 		download_db_flag=1;
 		AfxMessageBox(ERRO_DOWNLOAD_DB);
 		m_sys.ExitProc();
-		return;
+		goto LoadParameter_END;
 	}	
 	if(NULL!=field_data_pointer)
 	{
@@ -532,14 +540,13 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 		LOG(ERROR)<<"Sending Packet field number is not valid";
 		AfxMessageBox(ERRO_DOWNLOAD_DB);
 		m_sys.ExitProc();
-		return;
+		goto LoadParameter_END;
 	}
 
 	//首先从数据库中,提取固定的数据.同样的,要先根据企业名与动作名拼接关键字.
 	//Collect the data from the local database first according to the key of db
 	//(company name and action name).
 	DisplayDebugInfoToWebPage(_T("从数据库中,提取固定的数据."));
-	CString field_id;
 	for(int i=0; i<field_num; i++){
 		key.Empty();
 		field_data_pointer = NULL;
@@ -571,21 +578,17 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 
 	//从USB KEY 中取出终端号ID，并放入固定的输入位置第三个(详细见协议中定义）
 	//此处要求，必须插入USB KEY, 否则会报错返回。
-	CString terminal_id;
-	CString user_id;
-	CString err_info;
+
 
 	terminal_id.Empty();
 	user_id.Empty();
-	m_usbkey.InitInstance();
 	terminal_id = m_usbkey.GetTerminalID(err_info);
 	user_id = m_usbkey.GetUserID(err_info);
-	m_usbkey.ExitInstance();
 
 	if(TRUE==terminal_id.IsEmpty()|| TRUE==user_id.IsEmpty()){
 		LOG(ERROR)<<"While Get USB Key GetTokenName, failed. Sorry.";
 		SetErrorInfo4Web(OCX_ERR_USB_KEY_CODE);
-		return;		
+		goto LoadParameter_END;
 	}
 	else{
 		m_InputFieldBuffer[TERMINAL_ID_POSITION] = terminal_id;
@@ -612,7 +615,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 		LOG(INFO)<<"Packet has been ready, and return to Web for next command.";
 		m_OutputParameterA.Empty();
 		m_OutputParameterA = sending_packet_data;
-		return;
+		goto LoadParameter_END;
 	}
 
 	//页面要求发送(分成二类,签名数据或是未签名数据.)
@@ -629,7 +632,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 		else{
 			SetErrorInfo4Web(OCX_ERR_NETWORK_CODE);
 			DisplayDebugInfoToWebPage(res_str_info);
-			return;
+			goto LoadParameter_END;
 		}
 	}
 	else if(0==m_WebOrder.Compare(_T(ORDER_SIGN_SEND))){
@@ -664,9 +667,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 			//
 			//add here!
 			//Function_signed_crypted(char *msg, int msg_len, char **signed_crypted_send_pkt, int *signed_crypted_send_pkt_len);
-			m_usbkey.InitInstance();
-			BOOL ret_usb_key = m_usbkey.SignedEncryptPkt((unsigned char *)msg, msg_len, (unsigned char **) &signed_crypted_send_pkt,  signed_crypted_send_pkt_len);
-			m_usbkey.ExitInstance();
+			BOOL ret_usb_key = m_usbkey.SignedEncryptPkt(0, (unsigned char *)msg, msg_len, (unsigned char **) &signed_crypted_send_pkt,  signed_crypted_send_pkt_len);
 			LOG(INFO)<<"original send pkt_len: "<<msg_len<<"original pkt: "<<msg;
 
 
@@ -688,7 +689,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 					signed_crypted_send_pkt = NULL;
 					signed_crypted_send_pkt_len = 0;
 				}
-				return;
+				goto LoadParameter_END;
 			}
 
 			//发送签名加密后的数据包，为二进制数据，与字符串型的数据不同，
@@ -711,7 +712,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 
 			if(0!=err){
 				SetErrorInfo4Web(OCX_ERR_NETWORK_CODE);
-				return;
+				goto LoadParameter_END;
 			}
 
 			//解密，验签名 （由军虎的程序处理)
@@ -747,18 +748,16 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 					delete []buf;
 					AfxMessageBox(pWideChar.Trim(), MB_OK, 0);
 					SetErrorInfo4Web(ERROR_SERVER_FEEDBACK_CODE);
-					return;
+					goto LoadParameter_END;
 				}
 				//add here!
 				//err = Function_uncrypted_unsigned(char* signed_crypted_recv_pkt, int signed_crypted_recv_pkt_len, 
 				//	char* *uncrypted_unsigned_recv_pkt, int* uncrypted_unsigned_recv_pkt_len);
-				m_usbkey.InitInstance();
 				int ret_usb_key = 0;
-				ret_usb_key = m_usbkey.DecryptVerifyPkt((unsigned char*)signed_crypted_recv_pkt, signed_crypted_recv_pkt_len,
+				ret_usb_key = m_usbkey.DecryptVerifyPkt(0, (unsigned char*)signed_crypted_recv_pkt, signed_crypted_recv_pkt_len,
 					ret_state,
 					(unsigned char* * )&uncrypted_unsigned_recv_pkt,uncrypted_unsigned_recv_pkt_len,res_str);
 
-				m_usbkey.ExitInstance();
 
 				DisplayDebugInfoToWebPage( res_str );
 				LOG(INFO)<<"uncrypted_unsigned_recv_pkt_len"<<uncrypted_unsigned_recv_pkt_len;
@@ -781,7 +780,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 			}
 			else{
 				//如果接收有问题，直接返回。
-				return;
+				goto LoadParameter_END;
 			}
 
 			//如果解密,验签，成功或出错时
@@ -807,8 +806,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 					LOG(ERROR)<<"Unsigned and Uncrypted the data, [Failed]";
 					SetErrorInfo4Web(OCX_ERR_NETWORK_CODE);
 					DisplayDebugInfoToWebPage(_T("发送和接收签名和加密解密 出错."));
-
-					return;
+					goto LoadParameter_END;
 				}
 			}
 			else
@@ -816,14 +814,14 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 				LOG(ERROR)<<"Unsigned and Uncrypted the data, [Failed]";
 				SetErrorInfo4Web(OCX_ERR_Work_State_CODE);
 				DisplayDebugInfoToWebPage(_T("发送和接收签名和加密解密 出错."));
-				return;
+				goto LoadParameter_END;
 			}
 		}
 
 	} 
 	else{
 		DisplayDebugInfoToWebPage(_T("Require A Order?"));
-		return;
+		goto LoadParameter_END;
 	}
 
 
@@ -848,7 +846,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 		download_db_flag=1;
 		AfxMessageBox(ERRO_DOWNLOAD_DB);
 		m_sys.ExitProc();
-		return;
+		goto LoadParameter_END;
 	}	
 	backward_packet_template = field_data_pointer;
 	if(NULL!=field_data_pointer){
@@ -873,7 +871,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 		m_db.SetDbDownloadFlag(1);
 		AfxMessageBox(ERRO_DOWNLOAD_DB);
 		m_sys.ExitProc();
-		return;
+		goto LoadParameter_END;
 	}	
 
 	//分析下行数据包.
@@ -884,9 +882,10 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 	}
 	else{
 		DisplayDebugInfoToWebPage(_T("分析下行数据包过程 出错."));
-		return;
 	}
 	//刷新日志文件
+LoadParameter_END:
+	m_usbkey.ExitInstance();
 	//Flush the log messages into its log files.
 	google::FlushLogFiles(google::INFO);
 	google::FlushLogFiles(google::WARNING);
@@ -1441,6 +1440,12 @@ void CChargeClientActiveXCtrl::TestingFunction(LONG f)
 	m_InputParameterDebugFlag=_T("DEBUG_ON");
 	CString token_name;
 
+	//Enable Glog INFO output from javascript codes on the web pages.
+	if(0==m_InputParameterDebugFlag.Compare(_T(DEBUG_INFO_ON))){
+		google::SetLogDestination(google::INFO,(CHARGE_CLIENT_LOG_INFO_FILE));
+	}
+	m_sys.ClearLogFiles();
+
 	SysMainTestOptions test_opt = (SysMainTestOptions)f;
 
 	switch(test_opt){
@@ -1500,6 +1505,7 @@ void CChargeClientActiveXCtrl::TestingFunction(LONG f)
 	}
 
 	m_InputParameterDebugFlag = debug_flag;
+	google::FlushLogFiles(google::INFO);
 	return;
 }
 

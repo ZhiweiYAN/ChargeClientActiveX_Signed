@@ -10,6 +10,11 @@ const CK_ULONG MODULUS_BIT_LENGTH = 1024;	// should be  512/1024/2048
 
 // CUK_Et199Class 命令目标
 #define HASH_SHA1_LEN 20
+#define ET199_PRIVATE_KEY 1
+#define ET199_PUBLIC_KEY 2
+#define SRV_PUBLIC_KEY 3
+#define LABEL_SIZE 256
+#define SRV_PUBKEY_LABEL "Romete RSA Public Key"
 
 class CUK_Et199Class 
 {
@@ -176,7 +181,8 @@ protected:
 	//输出：CK_OBJECT_HANDLE &hObject   密钥句柄
 	//      CString &info               辅助信息
 	//返回：BOOL                        状态
-	BOOL GetUsbKeyObject(BOOL bRemotePublicKey,BOOL bPrivate,CK_OBJECT_HANDLE &hObject,CString &Info);
+	BOOL CUK_Et199Class::GetUsbKeyObject(int ukey_object_type, CK_OBJECT_HANDLE &hObject, CString &Info);
+	//BOOL GetUsbKeyObject(BOOL bRemotePublicKey,BOOL bPrivate,CK_OBJECT_HANDLE &hObject,CString &Info);
 };
 
 

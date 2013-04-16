@@ -531,7 +531,7 @@ DWORD CUK_Et199Class::GetPublicKey(BOOL bRemotePublicKey,unsigned char databuffe
 {
 	//数据对象句柄 
 	CK_OBJECT_HANDLE hObject = NULL; 
-	if(GetUsbKeyObject(bRemotePublicKey,FALSE,hObject,Info)==FALSE)
+	if(GetUsbKeyObject(SRV_PUBLIC_KEY,hObject,Info)==FALSE)
 	{
 		return 0;
 	}
@@ -694,76 +694,94 @@ BOOL CUK_Et199Class::GetDataObject(CString label,BOOL bPrivate,CK_OBJECT_HANDLE 
 	return TRUE;
 	
 }
-BOOL CUK_Et199Class::GetUsbKeyObject(BOOL bRemotePublicKey,BOOL bPrivate,CK_OBJECT_HANDLE &hObject,CString &Info)
+//BOOL CUK_Et199Class::GetUsbKeyObject(BOOL bRemotePublicKey,BOOL bPrivate,CK_OBJECT_HANDLE &hObject,CString &Info)
+BOOL CUK_Et199Class::GetUsbKeyObject(int ukey_object_type, CK_OBJECT_HANDLE &hObject, CString &Info)
+
 {
-	//数据对象句柄 
-	hObject = NULL; 
+	//Check ET199 Session Valid.
 	if(m_hSession ==NULL_PTR)
 	{
-		Info.Format(_T("have not connect dev"));
+		Info.Format(_T("have NOT a valid session about ET199. Failed."));
+		LOG(ERROR)<<"have NOT a valid session about ET199. Failed.";
 		return FALSE;
 	}
 
-	//1、建立数据对象
 	CK_RV ck_rv; 
-	//数据类型：普通数据 
+	hObject = NULL; 
+
+
 	CK_OBJECT_CLASS objClass = CKO_DATA; 
-	if (bPrivate==TRUE)
+	CK_BYTE label_subject[LABEL_SIZE];
+	memset(label_subject, 0, LABEL_SIZE);
+	
+	//如果是找服务器的公钥，那就找模板前三项匹配的; 否则找前两项匹配的。
+	int first_item_sum = 0;
+
+	switch(ukey_object_type)
 	{
-		objClass=CKO_PRIVATE_KEY;
-		LOG(INFO)<<"Find Private Key of UKEY.";
-	}
-	else
-	{
+	case SRV_PUBLIC_KEY:
 		objClass=CKO_PUBLIC_KEY;
-		LOG(INFO)<<"Find Public Key of UKEY.";
+		memcpy(label_subject, SRV_PUBKEY_LABEL, strlen(SRV_PUBKEY_LABEL));
+		first_item_sum = 3;
+		LOG(INFO)<<"To find the public key of verify server.";
+		break;
+	case ET199_PRIVATE_KEY:
+		objClass=CKO_PRIVATE_KEY;
+		first_item_sum = 2;
+		LOG(INFO)<<"To find the private key of ET199";
+		break;
+	case ET199_PUBLIC_KEY:
+		objClass=CKO_PUBLIC_KEY;
+		first_item_sum = 2;
+		LOG(INFO)<<"To find the public key of ET199";
+		break;
+	default:
+		return FALSE;
+		break;
 	}
+
+
 	CK_BBOOL bTrue = TRUE; 
 	CK_BBOOL bFalse = FALSE; 
-	//数据对象名称 
-	//CK_BYTE pbLabel[256];
-	//memcpy(pbLabel,label,label.GetLength());// = (CK_BYTE_PTR)label.GetBuffer(label.GetLength()); 
-	//2、生产密钥对
+
 	CK_ULONG ulModulusBits = MODULUS_BIT_LENGTH; 	
 	CK_ULONG keyType = CKK_RSA;
-	//CK_OBJECT_CLASS pubClass = CKO_PUBLIC_KEY;
+
 	CK_BYTE pubExponent[4] = {0x00, 0x01, 0x00, 0x01};
-	CK_BYTE subject[] = "Romete RSA Public Key";
+
+	CK_BYTE subject[] = SRV_PUBKEY_LABEL;
+
 	CK_ATTRIBUTE pubTemplate[] = { 
+		//数据类型，此处表示是公钥还是私钥
 		{CKA_CLASS,			&objClass,		sizeof(objClass)},
 		{CKA_KEY_TYPE,		&keyType,		sizeof(keyType)},
+		//{CKA_SUBJECT,		label_subject,	strlen(SRV_PUBKEY_LABEL)},
 		{CKA_SUBJECT,		subject,		sizeof(subject)},
 		{CKA_MODULUS_BITS,	&ulModulusBits, sizeof(ulModulusBits)},
 		{CKA_ENCRYPT,		&bTrue,			sizeof(bTrue)},
+		//在ET199硬件中，为CKA_TOKEN为TRUE
 		{CKA_TOKEN,			&bTrue,			sizeof(bTrue)},
 		{CKA_WRAP,			&bTrue,			sizeof(bTrue)},		
 		{CKA_PUBLIC_EXPONENT, pubExponent,	sizeof(pubExponent)}
 	};		
 	////////////////////////////////////////
 	CK_ULONG ulFindObjectCount = 0; 	
+
 	//2、查找数据对象 
-	//按照模板的前四项查找，即数据对象，硬件里面，私有区和标签符合的 
-	if (bRemotePublicKey==TRUE)
-	{
-		ck_rv = C_FindObjectsInit(m_hSession, pubTemplate, 3); 
-		LOG(INFO)<<"Find the public key of Server.";
-	}
-	else
-	{
-		ck_rv = C_FindObjectsInit(m_hSession, pubTemplate, 2); 
-		LOG(INFO)<<"Find the public key of UKEY.";
-	}
-	
+	//如果是找服务器的公钥，那就找模板前三项匹配的; 否则找前两项匹配的。
+	ck_rv = C_FindObjectsInit(m_hSession, pubTemplate, first_item_sum); 
+
 	if(ck_rv != CKR_OK) 
 	{ 
 		Info.Format(_T("C_FindObjectsInit Error! 0x%08x\n"),ck_rv); 
 		return FALSE; 
-	}  
+	} 
+
 	//将查找到的数据对象的句柄放到 hObject 中 
 	//第 3 个参数见 PKCS#11 的接口文档 
 	//当为 0 时，查找所有符合标准的数据对象 
 	//当为 1 时，查找一个符合标准的数据对象 
-	hObject = 0;  
+	//此处，我们只找第一个
 	ck_rv = C_FindObjects(m_hSession, &hObject, 1, &ulFindObjectCount); 
 	if(ck_rv != CKR_OK) 
 	{ 
@@ -786,7 +804,8 @@ BOOL CUK_Et199Class::GetUsbKeyObject(BOOL bRemotePublicKey,BOOL bPrivate,CK_OBJE
 		LOG(ERROR)<<"Find nothing about key.";
 		return FALSE; 
 	}
-	/////////////////////////////////////////
+	LOG(INFO)<<"The key has been found.";
+
 	return TRUE;
 	
 }
@@ -855,12 +874,23 @@ BOOL CUK_Et199Class::RSA_Signed(CK_BYTE_PTR pbMsg, CK_ULONG ulMsgLen,
 {
 	//get the private key
 	CK_OBJECT_HANDLE hPriKey = NULL; 
-	if(GetUsbKeyObject(FALSE,TRUE,hPriKey,Info)==FALSE)
+	if(GetUsbKeyObject(ET199_PRIVATE_KEY,hPriKey,Info)==FALSE)
 	{
 		LOG(ERROR)<<"Get private key for signed, failed.";
 		return FALSE;
 	}
 	LOG(INFO)<<"Get private key for signed, success.";
+
+	//PKCS 标准填充前15个字节
+	CK_BYTE tsha1[35] = 
+	{0x30, 0x21, 0x30, 0x09, 0x06, 
+	 0x05, 0x2b, 0x0e, 0x03, 0x02, 
+	 0x1a, 0x05, 0x00, 0x04, 0x14};
+
+	memcpy(tsha1+15, pbMsg, ulMsgLen);
+
+	int tsha1_len = 0;
+	tsha1_len = 35;
 
 	CK_RV rv;
 	CK_MECHANISM ckMechanism = {CKM_RSA_PKCS, NULL_PTR, 0};
@@ -873,7 +903,7 @@ BOOL CUK_Et199Class::RSA_Signed(CK_BYTE_PTR pbMsg, CK_ULONG ulMsgLen,
 	}
 	LOG(INFO)<<"C_signInit, success.";
 
-	rv = C_Sign(m_hSession, pbMsg, ulMsgLen, pSignature, ulSignatureLen);
+	rv = C_Sign(m_hSession, tsha1, tsha1_len, pSignature, ulSignatureLen);
 	if(CKR_OK != rv)
 	{
 		Info.Format(_T("Fail to Sign!Error code 0x%08X."), rv);
@@ -889,14 +919,33 @@ BOOL CUK_Et199Class::RSA_Signed(CK_BYTE_PTR pbMsg, CK_ULONG ulMsgLen,
 	
 }
 //签名验证
-BOOL CUK_Et199Class::RSA_Verify(BOOL bRemotePublicKey, 
+BOOL CUK_Et199Class::RSA_Verify(int test_flag, 
 								CK_BYTE_PTR pbMsg, CK_ULONG ulMsgLen,
 								CK_BYTE_PTR pSignature, CK_ULONG ulSignatureLen,
 								CString &info)
 {
 	//read the RSA public key of UKEY or verify server according to the value of bRmotePublicKey
 	CK_OBJECT_HANDLE hPubKey = NULL; 
-	if(GetUsbKeyObject(TRUE,FALSE,hPubKey,info)==FALSE)
+
+	int public_key_flag = 0;
+	if(1==test_flag){
+		public_key_flag = ET199_PUBLIC_KEY;
+	}else{
+		public_key_flag = SRV_PUBLIC_KEY;
+	}
+
+	//PKCS 标准填充前15个字节
+	CK_BYTE tsha1[35] = 
+	{0x30, 0x21, 0x30, 0x09, 0x06, 
+	0x05, 0x2b, 0x0e, 0x03, 0x02, 
+	0x1a, 0x05, 0x00, 0x04, 0x14};
+
+	memcpy(tsha1+15, pbMsg, ulMsgLen);
+
+	int tsha1_len = 0;
+	tsha1_len = 35;
+
+	if(GetUsbKeyObject(public_key_flag,hPubKey,info)==FALSE)
 	{
 		LOG(ERROR)<<"Get Public key for verify, failed.";
 		return FALSE;
@@ -912,7 +961,7 @@ BOOL CUK_Et199Class::RSA_Verify(BOOL bRemotePublicKey,
 		LOG(ERROR)<<"C_VerifyInit, failed, erro code:"<<rv;
 		return FALSE;
 	}
-	//rv = C_Verify(m_hSession, pbMsg, ulMsgLen, pSignature, ulSignatureLen);
+	rv = C_Verify(m_hSession, tsha1, tsha1_len, pSignature, ulSignatureLen);
 	if(CKR_OK != rv)
 	{
 		info.Format(_T("Fail to call verify!Error code 0x%08X."), rv);
@@ -929,14 +978,21 @@ BOOL CUK_Et199Class::RSA_Verify(BOOL bRemotePublicKey,
 
 //
 //加密
-BOOL CUK_Et199Class::RSA_Encrypt(BOOL bRemotePublicKey,
+BOOL CUK_Et199Class::RSA_Encrypt(int test_flag,
 								 CK_BYTE_PTR pbMsg, CK_ULONG ulMsgLen,
 								CK_BYTE_PTR pCipherBuffer, CK_ULONG_PTR ulCipherLen,
 								CString &info)
 {
 	//read the RSA public key of UKEY or verify server according to the value of bRmotePublicKey
 	CK_OBJECT_HANDLE hPubKey = NULL; 
-	if(GetUsbKeyObject(bRemotePublicKey,FALSE, hPubKey,info)==FALSE)
+	int public_key_flag = 0;
+	if(1==test_flag){
+		public_key_flag = ET199_PUBLIC_KEY;
+	}else{
+		public_key_flag = SRV_PUBLIC_KEY;
+	}
+
+	if(GetUsbKeyObject(public_key_flag, hPubKey,info)==FALSE)
 	{
 		LOG(ERROR)<<"Get Public key for Encrypt, failed.";
 		return FALSE;
@@ -988,7 +1044,7 @@ BOOL CUK_Et199Class::RSA_Decrypt(CK_BYTE_PTR pCipherBuffer, CK_ULONG ulCipherLen
 {
 	//read the RSA private key of UKEY 
 	CK_OBJECT_HANDLE hPriKey = NULL; 
-	if(GetUsbKeyObject(FALSE,TRUE,hPriKey,info)==FALSE)
+	if(GetUsbKeyObject(ET199_PRIVATE_KEY,hPriKey,info)==FALSE)
 	{
 		LOG(ERROR)<<"get private key for decrypt, failed.";
 		return FALSE;
