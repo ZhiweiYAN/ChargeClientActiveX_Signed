@@ -161,6 +161,9 @@ CChargeClientActiveXCtrl::CChargeClientActiveXCtrl()
 	//如果目录不存在，则创建一个；如果已经存在，则不做什么。
 	ret = ::CreateDirectory(_T(CHARGE_CLIENT_INSTALL_DIR),0);
 
+	//clear log files
+	m_sys.ClearLogFiles();
+
 	// Set the prefix name of log_files
 	// 设置LOG文件的前缀，如果是空字符，则暂时屏蔽这个级别的LOG。
 	//google::SetLogDestination(google::INFO,(CHARGE_CLIENT_LOG_INFO_FILE));
@@ -189,12 +192,16 @@ CChargeClientActiveXCtrl::CChargeClientActiveXCtrl()
 	ret = _access_s(CHARGE_CLIENT_DOWNLOAD_DB_FILE_NAME,0);
 	if(0 ==ret){
 		LOG(INFO)<<"Great, the DB file exists.";
-		if(-1 == GetDbVersionID() || 1==m_db.GetDbDownloadFlag())
-		{
+		if(-1 == GetDbVersionID() )	{
 			LOG(ERROR)<<"Check local DB version ID, [failed]";
 			DisplayDebugInfoToWebPage(_T("从数据库中,提取本地数据库版本ID,出错.设置自动下载标记 完成"));
 			download_db_flag = 1;//在OnDraw函数中，完成下载工作。
 
+		}
+		if(1==m_db.GetDbDownloadFlag()){
+			LOG(ERROR)<<"DB download flag has been set to 1, please download it.";
+			DisplayDebugInfoToWebPage(_T("从数据库中,提取本地数据库版本ID,出错.设置自动下载标记 完成"));
+			download_db_flag = 1;//在OnDraw函数中，完成下载工作。
 		}
 		else
 		{
@@ -256,6 +263,7 @@ void CChargeClientActiveXCtrl::OnDraw(CDC* pdc, const CRect& rcBounds, const CRe
 		{
 			DisplayDebugInfoToWebPage( _T("自动 下载本地数据库文件 正常.") );
 			m_db.SetDbDownloadFlag(0);
+			LOG(INFO)<<"Download DB flag has been set to 0";
 		}
 		else
 		{
@@ -268,7 +276,7 @@ void CChargeClientActiveXCtrl::OnDraw(CDC* pdc, const CRect& rcBounds, const CRe
 		{
 			LOG(ERROR)<<" Check local DB(downloaded) version ID, [failed]";
 			//DisplayDebugInfoToWebPage(_T("从数据库中,提取本地数据库版本ID,出错.检查是否下载成功."));
-			AfxMessageBox(ERRO_DOWNLOAD_DB);
+			//AfxMessageBox(ERRO_DOWNLOAD_DB);
 			return;
 		};
 	}
@@ -460,7 +468,14 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 	m_ActivexErrorCode = 0;
 	m_ActivexErrorInfo.Empty();
 
-	m_usbkey.InitInstance();
+	ret = m_usbkey.InitInstance();
+	if(-1==ret){
+		LOG(ERROR)<<"Load USB Key library (DLL), failed.";
+		DisplayDebugInfoToWebPage(_T("USB key 的动态链接库 DLL，加载，失败。"));
+		AfxMessageBox(_T("USB key 的动态链接库 DLL加载，失败。请删除旧的OCX后，重新下载OCX。"));
+		goto LoadParameter_END;
+	}
+	LOG(INFO)<<"Load the USB key library, OK.";
 
 	//显示一个本地数据库的版本号,用于提示用.
 	//Display the version id of the local db file.
@@ -468,22 +483,26 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 		LOG(ERROR)<<"Check local DB version ID, [failed]";
 		DisplayDebugInfoToWebPage(_T("从数据库中,提取本地数据库版本ID,出错.检查是否下载成功."));
 		AfxMessageBox(ERRO_DOWNLOAD_DB);
-		m_sys.ExitProc();
+		download_db_flag=1;
+		m_db.SetDbDownloadFlag(1);
+		//m_sys.ExitProc();
 		goto LoadParameter_END;
 	};
-
-
+	LOG(INFO)<<"Get DB version ID, OK.";
 
 	//取公共包头模板,如果出错会关闭整个IE.
-	//Get Common packet header template, close IE if failed.
+	//Get Common Packet Header template, close IE if failed.
 	DisplayDebugInfoToWebPage(_T("取公共包头."));
 	key.Empty();
 	key = _T(COMMON_PKT_HEADR_TEMPLATE);
 	err = m_db.GetDataByKeyFromDB(key, &field_data_pointer, &field_data_length);
 	if(0!=err){
+		LOG(ERROR)<<"Find COMMON_PKT_HEADR_TEMPLATE ["<<T2A(key)<<"] in DB --> [NO Found]";
+		download_db_flag=1;
 		m_db.SetDbDownloadFlag(1);
+		goto LoadParameter_END;
 	}
-	CHECK(0==err)<<"Find common_packet_header_template in DB --> [NO Found].";
+	//CHECK(0==err)<<"Find common_packet_header_template in DB --> [NO Found].";
 	common_packet_header_template = field_data_pointer;
 	if(NULL!=field_data_pointer){
 		//DisplayDebugInfoToWebPage( A2T(field_data_pointer) );
@@ -494,7 +513,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 
 	//取上行企业数据包模板,Key要与企业的名称与动作(由WEB传递过来)进行拼接,如果出错会关闭整个IE.
 	//Reassemble the up-link packet template through name and action of company passed from web pages.
-	//Example:"unicom_xa_query_packet_forward_template"
+	//Example:"unicom_xa_query_forward_packet_template"
 	DisplayDebugInfoToWebPage(_T("取上行企业数据包模板."));
 	key.Empty();
 	key = m_InputParameterComName +_T("_")
@@ -503,19 +522,22 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 	err = m_db.GetDataByKeyFromDB(key, &field_data_pointer, &field_data_length);
 	if(-1==err)
 	{
-		LOG(INFO)<< "Find packet_forward_template in DB --> [NO Found].";
 		//增加新业务时，在旧数据库中无法查询到指定企业数据包模板
-		LOG(ERROR)<<"Find packet_forward_template in DB --> [NO Found]";
+		LOG(ERROR)<<"Find packet_forward_template ["<<T2A(key)<<"] in DB --> [NO Found]";
 		DisplayDebugInfoToWebPage(_T("在旧数据库中无法查询到指定企业数据包模板.请手动下载新数据库"));
 		m_db.SetDbDownloadFlag(1);
 		download_db_flag=1;
 		AfxMessageBox(ERRO_DOWNLOAD_DB);
-		m_sys.ExitProc();
+		//m_sys.ExitProc();
 		goto LoadParameter_END;
 	}	
+	LOG(INFO)<< "Find forward_packet_template in DB --> [OK].";
+
 	if(NULL!=field_data_pointer)
 	{
+		//copy db template to local variable
 		forward_packet_template = field_data_pointer;
+
 		free(field_data_pointer);
 		field_data_pointer = NULL;
 		//field_data_length = 0;
@@ -539,7 +561,9 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 	{
 		LOG(ERROR)<<"Sending Packet field number is not valid";
 		AfxMessageBox(ERRO_DOWNLOAD_DB);
-		m_sys.ExitProc();
+		download_db_flag=1;
+		m_db.SetDbDownloadFlag(1);
+		//m_sys.ExitProc();
 		goto LoadParameter_END;
 	}
 
@@ -593,6 +617,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 	else{
 		m_InputFieldBuffer[TERMINAL_ID_POSITION] = terminal_id;
 		m_InputFieldBuffer[USER_ID_POSITION] = user_id;
+		LOG(INFO)<<"Terminal_ID = "<<T2A(terminal_id)<<", Worker_ID = "<<T2A(user_id);
 	}
 
 	//////////////////////////////////////////////////////////////////
@@ -607,11 +632,11 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 	//binary packet. You should be careful about it.
 	m_tcp_send_buff.Empty();
 	m_tcp_send_buff = sending_packet_data;
-	//#ifdef DRUMTM_DEVELOP
-	//#endif
+
 	//如果页面暂不要求发送,则返回.目的是,页面要进一步处理组装完成数据包.
 	//If web pages need to process the whole packet contents, just return.
 	if(0==m_WebOrder.Compare(_T(ORDER_LOOP_BACK))){
+		LOG(INFO)<<"WebOrder = "<<T2A(m_WebOrder);
 		LOG(INFO)<<"Packet has been ready, and return to Web for next command.";
 		m_OutputParameterA.Empty();
 		m_OutputParameterA = sending_packet_data;
@@ -620,6 +645,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 
 	//页面要求发送(分成二类,签名数据或是未签名数据.)
 	//If web pages need to send un_signature pkt to the proxy server.
+	//Here, we enforce to set the order as adding signature.
 	m_WebOrder="SIGN_SEND";
 	if(0 ==m_WebOrder.Compare(_T(ORDER_PACK_SEND)))
 	{
@@ -648,9 +674,9 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 			//由于签名及加密处理后，数据的长度会有变化。
 			//所以，由签名单元来内部分配内存(malloc signed_crypted_pkt, uncrypted_unsigned_pkt)，
 			//外部程序负责释放(free signed_crypted_pkt, uncrypted_unsigned_pkt)，切记！
-			//The USB signature unit will tranform the original data into the cryptogram space
+			//The USB signature unit will transform the original data into the cryptogram space
 			//after adding signature and cryptic operation.
-			//For the view of a programer, we have to take the close relation with invoking functions.
+			//For the view of a programmer, we have to take the close relation with invoking functions.
 			//Thus, we should take care the application and release of memory, because the malloc and free operation 
 			//might be implemented in the different functions.
 			char* signed_crypted_send_pkt= NULL;
@@ -661,26 +687,28 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 			int uncrypted_unsigned_recv_pkt_len = 0;
 			char ret_state=' ';
 
-			//签名及加密处理(由军虎的程序处理）
+			//签名及加密处理
 			//The following function will transform the msg into signed_crypted_pkt).
 			//This means that the signed_crypted_pkt and signed_crypted_pkt_len in fact are output parameters.
 			//
-			//add here!
-			//Function_signed_crypted(char *msg, int msg_len, char **signed_crypted_send_pkt, int *signed_crypted_send_pkt_len);
-			BOOL ret_usb_key = m_usbkey.SignedEncryptPkt(0, (unsigned char *)msg, msg_len, (unsigned char **) &signed_crypted_send_pkt,  signed_crypted_send_pkt_len);
 			LOG(INFO)<<"original send pkt_len: "<<msg_len<<"original pkt: "<<msg;
+
+			// the first parameter (0) means that the operation is not a test.
+			BOOL ret_usb_key = m_usbkey.SignedEncryptPkt(0, 
+				(unsigned char *)msg, msg_len, 
+				(unsigned char **) &signed_crypted_send_pkt,  signed_crypted_send_pkt_len);
 
 
 			//处理后检查结果
 			//Check the result of the transform operation with signature and crypt.
 			if(NULL!= signed_crypted_send_pkt && 0 < signed_crypted_send_pkt_len){
-				LOG(INFO)<<"Add USB_KEY signture and transfer packet into cryptogam space, [Success]";
+				LOG(INFO)<<"Add USB_KEY signature and transfer packet into cryptogram space, [Success]";
 				DisplayDebugInfoToWebPage(_T("签名及加密数据，[成功]."));
 				LOG(INFO)<<"signed_crypted_send_pkt_len: "<<signed_crypted_send_pkt_len;
 				LOG(INFO)<<"signed_crypted_send_pkt: "<<T2A(m_db.hex2str(signed_crypted_send_pkt,signed_crypted_send_pkt_len));
 			}
 			else{
-				LOG(ERROR)<<"Add USB_KEY signture and transfer packet into cryptogam space, [Failed]";
+				LOG(ERROR)<<"Add USB_KEY signature and transfer packet into cryptogram space, [Failed]";
 				DisplayDebugInfoToWebPage(_T("签名及加密数据，[失败]."));
 
 				if(NULL!=signed_crypted_send_pkt){
@@ -715,11 +743,10 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 				goto LoadParameter_END;
 			}
 
-			//解密，验签名 （由军虎的程序处理)
-			//Check the TCP recv buffer, and unsign and uncrypt packet.
+			//解密，验签名 
+			//Check the TCP recv buffer, and decrypt the cipher text and verify the signature of accepted packet.
 			if(NULL != signed_crypted_recv_pkt && signed_crypted_recv_pkt_len >0){
-
-				LOG(INFO)<<"Tranform the singed and crypted data to unsigned and uncryted data";
+				LOG(INFO)<<"Check the TCP recv buffer, and decrypt the cipher text and verify the signature of accepted packet.";
 				LOG(INFO)<<"signed_crypted_recv_pkt_len"<<signed_crypted_recv_pkt_len;
 				LOG(INFO)<<"signed_crypted_recv_pkt"<<T2A(m_db.hex2str(signed_crypted_recv_pkt,signed_crypted_recv_pkt_len));
 
@@ -734,25 +761,29 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 					//计算char *数组大小，以字节为单位，一个汉字占两个字节
 					char* sText = pkt_hdr->ack_info;
 					int charLen = ACK_INFO_LEN;
+
 					//计算多字节字符的大小，按字符计算。
 					int len = MultiByteToWideChar(CP_UTF8,0,sText,charLen,NULL,0);
+
 					//为宽字节字符数组申请空间，数组大小为按字节计算的多字节字符大小
 					TCHAR *buf = new TCHAR[len + 1];
+
 					//多字节编码转换成宽字节编码
 					MultiByteToWideChar(CP_UTF8 ,0,sText,charLen,buf,len);
 					buf[len] = '\0'; //添加字符串结尾，注意不是len+1
+
 					//将TCHAR数组转换为CString
 					CString pWideChar;
 					pWideChar.Append(buf);
+
 					//删除缓冲区
 					delete []buf;
 					AfxMessageBox(pWideChar.Trim(), MB_OK, 0);
 					SetErrorInfo4Web(ERROR_SERVER_FEEDBACK_CODE);
 					goto LoadParameter_END;
 				}
-				//add here!
-				//err = Function_uncrypted_unsigned(char* signed_crypted_recv_pkt, int signed_crypted_recv_pkt_len, 
-				//	char* *uncrypted_unsigned_recv_pkt, int* uncrypted_unsigned_recv_pkt_len);
+				//
+
 				int ret_usb_key = 0;
 				ret_usb_key = m_usbkey.DecryptVerifyPkt(0, (unsigned char*)signed_crypted_recv_pkt, signed_crypted_recv_pkt_len,
 					ret_state,
@@ -784,14 +815,14 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 			}
 
 			//如果解密,验签，成功或出错时
-			//Check the result of unsigned and uncrypted operation.
+			//Check the result of verify and decrypt operation.
 			if( 0 == err && NULL!=uncrypted_unsigned_recv_pkt && uncrypted_unsigned_recv_pkt_len>0)
 			{
-				LOG(INFO)<<"Unsigned and Uncrypted the data, [Success]";
+				LOG(INFO)<<"Verify and Decrypt the data, [Success]";
 				DisplayDebugInfoToWebPage(_T("发送和接收签名和加密解密， 成功."));
 
 				//将解密验签后的数据放在缓冲中，等待下一步的分析。
-				//Put the downlink data into the buffer for next split operation.
+				//Put the down link data into the buffer for next split operation.
 				m_tcp_recv_buff = A2T(uncrypted_unsigned_recv_pkt);
 				LOG(INFO)<<"Recv original packet:"<<T2A(m_tcp_recv_buff);
 
@@ -803,7 +834,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 					uncrypted_unsigned_recv_pkt_len = 0;
 				}
 				else{
-					LOG(ERROR)<<"Unsigned and Uncrypted the data, [Failed]";
+					LOG(ERROR)<<"Verify and decrypt the data, [Failed]";
 					SetErrorInfo4Web(OCX_ERR_NETWORK_CODE);
 					DisplayDebugInfoToWebPage(_T("发送和接收签名和加密解密 出错."));
 					goto LoadParameter_END;
@@ -811,7 +842,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 			}
 			else
 			{
-				LOG(ERROR)<<"Unsigned and Uncrypted the data, [Failed]";
+				LOG(ERROR)<<"Verify and decrypt the data, [Failed]";
 				SetErrorInfo4Web(OCX_ERR_Work_State_CODE);
 				DisplayDebugInfoToWebPage(_T("发送和接收签名和加密解密 出错."));
 				goto LoadParameter_END;
@@ -835,17 +866,16 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 		+ m_InputParameterActName +_T("_")
 		+ _T(COM_PKT_DOWN_PKT_TEMPLATE);
 	err = m_db.GetDataByKeyFromDB(key, &field_data_pointer, &field_data_length);
-	CHECK(0==err)<<"Find backward_packet_template in DB --> [NO Found].";
+	//CHECK(0==err)<<"Find backward_packet_template in DB --> [NO Found].";
 	if(-1==err)
 	{
-		LOG(INFO)<< "Find backward_packet_template in DB --> [NO Found].";
 		//增加新业务时，在旧数据库中无法查询到指定企业数据包模板
-		LOG(ERROR)<<"Find backward_packet_template in DB --> [NO Found]";
+		LOG(ERROR)<<"Find backward_packet_template ["<<T2A(key)<<"] in DB --> [NO Found]";
 		DisplayDebugInfoToWebPage(_T("在旧数据库中无法查询到指定企业数据包模板.请手动下载新数据库"));
 		m_db.SetDbDownloadFlag(1);
 		download_db_flag=1;
 		AfxMessageBox(ERRO_DOWNLOAD_DB);
-		m_sys.ExitProc();
+		//m_sys.ExitProc();
 		goto LoadParameter_END;
 	}	
 	backward_packet_template = field_data_pointer;
@@ -864,13 +894,12 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 	//CHECK(-1!=field_num)<<"Receiving Packet field number is not valid";
 	if(-1==field_num)
 	{
-		LOG(INFO)<< "Receiving Packet field number is not valid.";
 		LOG(ERROR)<<"Receiving Packet field number is not valid";
 		DisplayDebugInfoToWebPage(_T("企业数据包模版不完整造成解析失败.请手动下载新数据库"));
 		download_db_flag=1;
 		m_db.SetDbDownloadFlag(1);
 		AfxMessageBox(ERRO_DOWNLOAD_DB);
-		m_sys.ExitProc();
+		//m_sys.ExitProc();
 		goto LoadParameter_END;
 	}	
 
@@ -885,13 +914,20 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 	}
 	//刷新日志文件
 LoadParameter_END:
+
 	m_usbkey.ExitInstance();
+
 	//Flush the log messages into its log files.
 	google::FlushLogFiles(google::INFO);
 	google::FlushLogFiles(google::WARNING);
 	google::FlushLogFiles(google::ERROR);
 
 	DisplayDebugInfoToWebPage(_T("完成一次过程."));
+
+	//Close IE because of incomplete DB.
+	if(1==download_db_flag){
+		m_sys.ExitProc();
+	}
 
 	return;
 }

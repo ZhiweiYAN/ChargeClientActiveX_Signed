@@ -61,19 +61,20 @@
 #define DB_PROXY_SERVER_SIGNATURE_PORT "verify_server_port"
 
 //定义出错的显示信息, define the error informations
-#define ERRO_DOWNLOAD_DB _T("本地数据库不完整.将关闭浏览器,请重启浏览器后手动下载数据库！")
+#define ERRO_DOWNLOAD_DB _T("本地<业务模板数据库>不完整，将关闭浏览器。\n请重启浏览器后，在自检页面，手动下载数据库。\
+\n(The local charge client db is not completed. Please download it after restart the IE brower application.)")
 #define OCX_ERR_NETWORK_CODE 11
-#define OCX_ERR_NETWORK_INFO "网络通信故障，可能原因是网络不通或验证服务器不正常.\
+#define OCX_ERR_NETWORK_INFO "网络通信故障，可能原因是网络不通或验证服务器不正常。\n请重启浏览器后，在自检页面，测试与数据中心的网络连接。\
 \n(Network failed, and return errors after invoking socket functions.)"
 #define OCX_ERR_USB_KEY_CODE 12
-#define OCX_ERR_USB_KEY_INFO " USB KEY 出错. 可能原因是系统中没有发现合法的USB KEY.\
+#define OCX_ERR_USB_KEY_INFO " USB KEY 出错， 可能原因是系统中没有发现合法的USB KEY。\n请重启浏览器后，在自检页面，测试USB KEY的签名功能。\
 \n(USB Key operations failed, and invalid usb keys installed.)"
 
 #define OCX_ERR_Work_State_CODE 13
-#define OCX_ERR_Work_State_INFO "发送和接收签名和加密解密, 出错."
+#define OCX_ERR_Work_State_INFO "发送和接收签名过程中，或加解密过程中，出错。\n请联系 利安 数据中心管理员。"
 
 #define ERROR_SERVER_FEEDBACK_CODE 14
-#define ERROR_SERVER_FEEDBACK_INFO "数据中心服务器端出错."
+#define ERROR_SERVER_FEEDBACK_INFO "数据中心服务器端，出错。\n请联系 利安 数据中心管理员。"
 
 //页面的显示位置, the position label of web pages
 #define DISPLAY_WEB_POSITION 911L 

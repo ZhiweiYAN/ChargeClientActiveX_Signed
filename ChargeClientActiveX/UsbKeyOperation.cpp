@@ -12,7 +12,7 @@ CUsbKeyOperation::~CUsbKeyOperation(void)
 }
 
 
-bool CUsbKeyOperation::InitInstance(void)
+int CUsbKeyOperation::InitInstance(void)
 {
 	//引导ET199的库文件，进行环境初始化
 	CK_RV rv;
@@ -21,12 +21,12 @@ bool CUsbKeyOperation::InitInstance(void)
 	if(CKR_OK != rv)
 	{
 		LOG(ERROR)<<"Can't Load PKCS#11 ET199 USBKEY Library!";
-		return false;
+		return -1;
 	}
 	else
 	{
 		LOG(INFO)<<"Load PKCS#11 ET199 USBKEY Library OK.";
-		return true;
+		return 1;
 	}
 
 }

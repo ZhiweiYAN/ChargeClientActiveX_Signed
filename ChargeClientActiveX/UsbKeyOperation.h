@@ -78,7 +78,7 @@ public:
 	void GetErroInfo(unsigned char revbuffer[],int reclen,CString &erro);
 	////////////////////////////////////
 	//初始化UK环境
-	bool InitInstance();
+	int InitInstance();
 	
 
 	/////////////////////////////////////
