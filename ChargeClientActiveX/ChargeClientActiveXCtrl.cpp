@@ -166,10 +166,10 @@ CChargeClientActiveXCtrl::CChargeClientActiveXCtrl()
 
 	// Set the prefix name of log_files
 	// 设置LOG文件的前缀，如果是空字符，则暂时屏蔽这个级别的LOG。
-	//google::SetLogDestination(google::INFO,(CHARGE_CLIENT_LOG_INFO_FILE));
-	//google::SetLogDestination(google::INFO,(""));
+	// google::SetLogDestination(google::INFO,(CHARGE_CLIENT_LOG_INFO_FILE));
+	// google::SetLogDestination(google::INFO,(""));
 	google::SetLogDestination(google::ERROR,(CHARGE_CLIENT_LOG_ERROR_FILE));
-	//google::SetLogDestination(google::WARNING,(CHARGE_CLIENT_LOG_WARNING_FILE));
+	// google::SetLogDestination(google::WARNING,(CHARGE_CLIENT_LOG_WARNING_FILE));
 	google::SetLogDestination(google::WARNING,"");
 
 	// Guarantee the google-log running once
@@ -185,6 +185,8 @@ CChargeClientActiveXCtrl::CChargeClientActiveXCtrl()
 			+_T("\n\n发布日期: ")_T(__DATE__)
 			+_T("\n发布时间: ") + _T(__TIME__);
 		AfxMessageBox(version_info_str,MB_OK, 0);	
+
+		LOG(INFO)<<version_info_str;
 
 	}
 
@@ -224,12 +226,6 @@ CChargeClientActiveXCtrl::CChargeClientActiveXCtrl()
 CChargeClientActiveXCtrl::~CChargeClientActiveXCtrl()
 {
 	// TODO: 在此清理控件的实例数据。
-	/*if(1==init_UKInit_once)
-	{
-	m_usbkey.ExitInstance();
-	}
-	init_UKInit_once--;*/
-
 	LOG(INFO)<<"ChargeClient LOG System Work -->[End]..";
 	google::ShutdownGoogleLogging();
 }
@@ -448,6 +444,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 	CString key ;
 	char *field_data_pointer = NULL;
 	int field_data_length = 0;
+
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 	//Enable Glog INFO output from javascript codes on the web pages.
@@ -778,8 +775,11 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 
 					//删除缓冲区
 					delete []buf;
+					buf = NULL;
+
 					AfxMessageBox(pWideChar.Trim(), MB_OK, 0);
 					SetErrorInfo4Web(ERROR_SERVER_FEEDBACK_CODE);
+
 					goto LoadParameter_END;
 				}
 				//
@@ -819,7 +819,7 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 			if( 0 == err && NULL!=uncrypted_unsigned_recv_pkt && uncrypted_unsigned_recv_pkt_len>0)
 			{
 				LOG(INFO)<<"Verify and Decrypt the data, [Success]";
-				DisplayDebugInfoToWebPage(_T("发送和接收签名和加密解密， 成功."));
+				DisplayDebugInfoToWebPage(_T("网络发送和接收，OK. 验签解密，OK."));
 
 				//将解密验签后的数据放在缓冲中，等待下一步的分析。
 				//Put the down link data into the buffer for next split operation.
@@ -833,18 +833,13 @@ void CChargeClientActiveXCtrl::LoadParameter(void)
 					uncrypted_unsigned_recv_pkt = NULL;
 					uncrypted_unsigned_recv_pkt_len = 0;
 				}
-				else{
-					LOG(ERROR)<<"Verify and decrypt the data, [Failed]";
-					SetErrorInfo4Web(OCX_ERR_NETWORK_CODE);
-					DisplayDebugInfoToWebPage(_T("发送和接收签名和加密解密 出错."));
-					goto LoadParameter_END;
-				}
+
 			}
 			else
 			{
 				LOG(ERROR)<<"Verify and decrypt the data, [Failed]";
 				SetErrorInfo4Web(OCX_ERR_Work_State_CODE);
-				DisplayDebugInfoToWebPage(_T("发送和接收签名和加密解密 出错."));
+				DisplayDebugInfoToWebPage(_T("发送和接收, 验签名和解密 出错."));
 				goto LoadParameter_END;
 			}
 		}
@@ -922,7 +917,7 @@ LoadParameter_END:
 	google::FlushLogFiles(google::WARNING);
 	google::FlushLogFiles(google::ERROR);
 
-	DisplayDebugInfoToWebPage(_T("完成一次过程."));
+	DisplayDebugInfoToWebPage(_T("完成一次交易过程."));
 
 	//Close IE because of incomplete DB.
 	if(1==download_db_flag){
